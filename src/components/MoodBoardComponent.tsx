@@ -203,7 +203,7 @@ export const MoodBoard: React.FC = () => {
                         <Palette className="h-6 w-6" />
                     </Button>
                 </PopoverTrigger>
-                <PopoverContent>
+                <PopoverContent className="bg-transparent">
                     <div className="flex flex-col items-center space-y-4">
                         <div className="flex space-x-2">
                             {predefinedColors.map((color) => (
