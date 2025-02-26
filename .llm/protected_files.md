@@ -1,0 +1,10 @@
+package.json
+tsconfig.json
+tsconfig.node.json
+vite.config.ts
+jest.config.cjs
+tests/setupTests.ts
+src/App.css
+src/components/SidePanelGallery.tsx
+src/components/BaseFileUpload.tsx
+src/components/ImageFileUpload.tsx.env

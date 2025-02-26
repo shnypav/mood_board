@@ -1,0 +1,6 @@
+- :common: All new code
+- :frontend_api_hints: Frontend API hints like correctly using MediaRecorder, Camera etc
+- :api: API access code
+- :react: React components
+- :tests: Unit tests
+- :design: UI design
