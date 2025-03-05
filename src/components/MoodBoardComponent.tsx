@@ -28,6 +28,7 @@ const ImageCard: React.FC<{
     const [isRemoving, setIsRemoving] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const [isDragging, setIsDragging] = useState(false);
+   const [dragPosition, setDragPosition] = useState({ x: position?.x || 0, y: position?.y || 0 });
     const { toast } = useToast();
 
     const handleRemove = async (e: React.MouseEvent) => {
@@ -47,12 +48,18 @@ const ImageCard: React.FC<{
 
     const handleDragEnd = (event: any, info: any) => {
         setIsDragging(false);
-       // Use the final offset values directly
-       onPositionChange(id, { x: info.offset.x + (position?.x || 0), y: info.offset.y + (position?.y || 0) });
+       // Update the position state with the final drag position
+       const newPosition = {
+           x: dragPosition.x + info.offset.x,
+           y: dragPosition.y + info.offset.y
+       };
+       setDragPosition(newPosition);
+       onPositionChange(id, newPosition);
     };
 
     return (
         <motion.div
+            layout
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -62,16 +69,16 @@ const ImageCard: React.FC<{
            dragElastic={0}
             onDragStart={() => setIsDragging(true)}
             onDragEnd={handleDragEnd}
-           style={{
-               width: '200px',
-               height: '200px',
-               zIndex: isDragging ? 10 : 1,
-               touchAction: "none",
-               x: position?.x || 0,
-               y: position?.y || 0
-           }}
+           initial={{ x: dragPosition.x, y: dragPosition.y }}
+           animate={{ x: dragPosition.x, y: dragPosition.y }}
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
+            style={{
+                width: '200px',
+                height: '200px',
+                zIndex: isDragging ? 10 : 1,
+                touchAction: "none"
+            }}
         >
             {isLoading && <ImageCardSkeleton />}
             <img
@@ -112,42 +119,6 @@ const ImageCard: React.FC<{
         </motion.div>
     );
 };
-
-const EmptyState: React.FC<{ onAddClick: () => void }> = ({ onAddClick }) => (
-    <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className="flex flex-col items-center justify-center min-h-[400px] space-y-6"
-    >
-        <img
-            src="/assets/empty-board.svg"
-            alt="Empty board"
-            className="w-60 h-60 opacity-50"
-        />
-        <div className="text-center">
-            <h2 className="text-xl font-semibold mb-2">Your mood board is empty</h2>
-            <p className="text-muted-foreground mb-4">
-                Add some images to get started with your inspiration collection
-            </p>
-            <Button
-                onClick={onAddClick}
-                size="lg"
-            >
-                <ImageIcon className="mr-2 h-5 w-5" />
-                Add First Image
-            </Button>
-        </div>
-    </motion.div>
-);
-
-const LoadingGrid: React.FC = () => (
-    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-        {[...Array(8)].map((_, index) => (
-            <ImageCardSkeleton key={index} />
-        ))}
-    </div>
-);
 
 export const MoodBoard: React.FC = () => {
    const boardRef = useRef<HTMLDivElement>(null);
