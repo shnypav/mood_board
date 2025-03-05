@@ -3,12 +3,14 @@ import React, { createContext, useContext, useState } from 'react';
 interface Image {
     id: string;
     imageUrl: string;
+   position?: { x: number, y: number };
 }
 
 interface ImageContextType {
     images: Image[];
     addImage: (imageUrl: string) => void;
     removeImage: (id: string) => Promise<void>;
+   updateImagePosition: (id: string, position: { x: number, y: number }) => void;
     isLoading: boolean;
 }
 
@@ -30,8 +32,16 @@ export const ImageProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         setImages(prev => prev.filter(image => image.id !== id));
     };
 
+   const updateImagePosition = (id: string, position: { x: number, y: number }) => {
+       setImages(prev =>
+           prev.map(image =>
+               image.id === id ? { ...image, position } : image
+           )
+       );
+   };
+
     return (
-        <ImageContext.Provider value={{ images, addImage, removeImage, isLoading }}>
+       <ImageContext.Provider value={{ images, addImage, removeImage, updateImagePosition, isLoading }}>
             {children}
         </ImageContext.Provider>
     );
