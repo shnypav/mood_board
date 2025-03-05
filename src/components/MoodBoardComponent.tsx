@@ -120,6 +120,7 @@ const ImageCard: React.FC<{
     );
 };
 
+// Fix: Define the EmptyState component that was missing
 const EmptyState: React.FC<{ onAddClick: () => void }> = ({ onAddClick }) => (
     <motion.div
         initial={{ opacity: 0 }}
