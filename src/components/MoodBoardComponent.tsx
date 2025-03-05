@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
 import { useImages } from '../contexts/ImageContext';
 import { SidePanelGallery } from './SidePanelGallery';
@@ -20,14 +20,14 @@ const ImageCardSkeleton: React.FC = () => (
 const ImageCard: React.FC<{
     id: string;
     imageUrl: string;
-   position?: { x: number, y: number };
-   onPositionChange: (id: string, position: { x: number, y: number }) => void;
+    position?: { x: number, y: number };
+    onPositionChange: (id: string, position: { x: number, y: number }) => void;
     onRemove: (id: string) => Promise<void>;
 }> = ({ id, imageUrl, position, onPositionChange, onRemove }) => {
     const [isHovered, setIsHovered] = useState(false);
     const [isRemoving, setIsRemoving] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
-   const [isDragging, setIsDragging] = useState(false);
+    const [isDragging, setIsDragging] = useState(false);
     const { toast } = useToast();
 
     const handleRemove = async (e: React.MouseEvent) => {
@@ -45,43 +45,44 @@ const ImageCard: React.FC<{
         }
     };
 
-   const handleDragEnd = (event: any, info: any) => {
-       setIsDragging(false);
-       onPositionChange(id, { x: info.point.x, y: info.point.y });
-   };
+    const handleDragEnd = (event: any, info: any) => {
+        setIsDragging(false);
+       // Use the final offset values directly
+       onPositionChange(id, { x: info.offset.x + (position?.x || 0), y: info.offset.y + (position?.y || 0) });
+    };
 
     return (
         <motion.div
-            layout
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-           className="relative aspect-square group absolute"
-           drag
-           dragMomentum={false}
-           onDragStart={() => setIsDragging(true)}
-           onDragEnd={handleDragEnd}
-           initial={{ x: position?.x || 0, y: position?.y || 0 }}
-           animate={{ x: position?.x || 0, y: position?.y || 0 }}
-            onMouseEnter={() => setIsHovered(true)}
-            onMouseLeave={() => setIsHovered(false)}
+            className="relative aspect-square group absolute"
+            drag
+            dragMomentum={false}
+           dragElastic={0}
+            onDragStart={() => setIsDragging(true)}
+            onDragEnd={handleDragEnd}
            style={{
                width: '200px',
                height: '200px',
                zIndex: isDragging ? 10 : 1,
-               touchAction: "none"
+               touchAction: "none",
+               x: position?.x || 0,
+               y: position?.y || 0
            }}
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
         >
             {isLoading && <ImageCardSkeleton />}
             <img
                 src={imageUrl}
                 alt="Mood board image"
-               className={`w-full h-full object-cover rounded-lg transition-opacity duration-200 ${isLoading ? 'opacity-0' : 'opacity-100'} cursor-move`}
+                className={`w-full h-full object-cover rounded-lg transition-opacity duration-200 ${isLoading ? 'opacity-0' : 'opacity-100'} cursor-move`}
                 onLoad={() => setIsLoading(false)}
                 onError={() => setIsLoading(false)}
             />
             <AnimatePresence>
-               {isHovered && !isRemoving && !isDragging && (
+                {isHovered && !isRemoving && !isDragging && (
                     <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
@@ -149,9 +150,10 @@ const LoadingGrid: React.FC = () => (
 );
 
 export const MoodBoard: React.FC = () => {
+   const boardRef = useRef<HTMLDivElement>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const { backgroundColor, setBackgroundColor } = useTheme();
-   const { images, removeImage, updateImagePosition, isLoading } = useImages();
+    const { images, removeImage, updateImagePosition, isLoading } = useImages();
     const { toast } = useToast();
 
     const predefinedColors = ['#FFCDD2', '#C8E6C9', '#BBDEFB', '#FFF9C4', '#D1C4E9'];
@@ -174,9 +176,9 @@ export const MoodBoard: React.FC = () => {
         setBackgroundColor(color);
     };
 
-   const handlePositionChange = (id: string, position: { x: number, y: number }) => {
-       updateImagePosition(id, position);
-   };
+    const handlePositionChange = (id: string, position: { x: number, y: number }) => {
+        updateImagePosition(id, position);
+    };
 
     if (isLoading) {
         return <LoadingGrid />;
@@ -184,8 +186,9 @@ export const MoodBoard: React.FC = () => {
 
     return (
         <div
-           className="relative min-h-[600px] p-4"
-           style={{ height: '100vh' }}
+            className="relative min-h-[600px] p-4"
+            style={{ height: '100vh' }}
+           ref={boardRef}
         >
             <AnimatePresence>
                 {images.length === 0 ? (
@@ -195,20 +198,20 @@ export const MoodBoard: React.FC = () => {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                       className="relative w-full h-full"
+                        className="relative w-full h-full"
                     >
-                       <AnimatePresence>
-                           {images.map((image) => (
-                               <ImageCard
-                                   key={image.id}
-                                   id={image.id}
-                                   imageUrl={image.imageUrl}
-                                   position={image.position}
-                                   onPositionChange={handlePositionChange}
-                                   onRemove={removeImage}
-                               />
-                           ))}
-                       </AnimatePresence>
+                        <AnimatePresence>
+                            {images.map((image) => (
+                                <ImageCard
+                                    key={image.id}
+                                    id={image.id}
+                                    imageUrl={image.imageUrl}
+                                    position={image.position}
+                                    onPositionChange={handlePositionChange}
+                                    onRemove={removeImage}
+                                />
+                            ))}
+                        </AnimatePresence>
                         <Button
                             className="fixed bottom-8 right-8 rounded-full h-14 w-14 shadow-lg"
                             onClick={handleOpenModal}
