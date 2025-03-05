@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, {useState, useRef, useEffect} from 'react';
 import { useTheme } from '../contexts/ThemeContext';
 import { useImages } from '../contexts/ImageContext';
 import { SidePanelGallery } from './SidePanelGallery';
@@ -101,6 +101,7 @@ const ImageCard: React.FC<{
                             size="icon"
                             onClick={handleRemove}
                             disabled={isRemoving}
+                            title="Add Image (Ctrl+N)"
                         >
                             <Trash2 className="h-4 w-4" />
                         </Button>
@@ -183,6 +184,24 @@ export const MoodBoard: React.FC = () => {
     const handlePredefinedColorClick = (color: string) => {
         setBackgroundColor(color);
     };
+
+    // Add keyboard shortcut handler for Ctrl+N (Command+N on Mac)
+    useEffect(() => {
+        const handleKeyDown = (event: KeyboardEvent) => {
+            // Check for Ctrl+N or Command+N (Mac)
+            if ((event.ctrlKey || event.metaKey) && event.key === 'n') {
+                event.preventDefault(); // Prevent default browser behavior
+                handleOpenModal();
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+
+        // Clean up event listener on component unmount
+        return () => {
+            window.removeEventListener('keydown', handleKeyDown);
+        };
+    }, []);
 
     const handlePositionChange = (id: string, position: { x: number, y: number }) => {
         updateImagePosition(id, position);
