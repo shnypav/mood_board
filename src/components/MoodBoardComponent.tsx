@@ -21,9 +21,11 @@ const ImageCard: React.FC<{
     id: string;
     imageUrl: string;
     position?: { x: number, y: number };
+    zIndex: number;
     onPositionChange: (id: string, position: { x: number, y: number }) => void;
     onRemove: (id: string) => Promise<void>;
-}> = ({ id, imageUrl, position, onPositionChange, onRemove }) => {
+    onBringToFront: (id: string) => void;
+}> = ({ id, imageUrl, position, zIndex, onPositionChange, onRemove, onBringToFront }) => {
     const [isHovered, setIsHovered] = useState(false);
     const [isRemoving, setIsRemoving] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
@@ -46,6 +48,11 @@ const ImageCard: React.FC<{
         }
     };
 
+    const handleDragStart = () => {
+        setIsDragging(true);
+        onBringToFront(id);
+    };
+
     const handleDragEnd = (event: any, info: any) => {
         setIsDragging(false);
         // Update the position state with the final drag position
@@ -55,6 +62,11 @@ const ImageCard: React.FC<{
         };
         setDragPosition(newPosition);
         onPositionChange(id, newPosition);
+    };
+
+    // Bring image to front when clicked
+    const handleClick = () => {
+        onBringToFront(id);
     };
 
     return (
@@ -67,8 +79,9 @@ const ImageCard: React.FC<{
             drag
             dragMomentum={false}
             dragElastic={0}
-            onDragStart={() => setIsDragging(true)}
+            onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
+            onClick={handleClick}
             initial={{ x: dragPosition.x, y: dragPosition.y }}
             animate={{ x: dragPosition.x, y: dragPosition.y }}
             onMouseEnter={() => setIsHovered(true)}
@@ -76,7 +89,7 @@ const ImageCard: React.FC<{
             style={{
                 width: '200px',
                 height: '200px',
-                zIndex: isDragging ? 10 : 1,
+                zIndex: isDragging ? zIndex + 1000 : zIndex, // Extra boost during drag
                 touchAction: "none"
             }}
         >
@@ -162,7 +175,7 @@ export const MoodBoard: React.FC = () => {
     const boardRef = useRef<HTMLDivElement>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const { backgroundColor, setBackgroundColor } = useTheme();
-    const { images, removeImage, updateImagePosition, isLoading } = useImages();
+    const { images, removeImage, updateImagePosition, bringToFront, isLoading } = useImages();
     const { toast } = useToast();
 
     const predefinedColors = ['#FFCDD2', '#C8E6C9', '#BBDEFB', '#FFF9C4', '#D1C4E9'];
@@ -234,8 +247,10 @@ export const MoodBoard: React.FC = () => {
                                     id={image.id}
                                     imageUrl={image.imageUrl}
                                     position={image.position}
+                                    zIndex={image.zIndex || 1}
                                     onPositionChange={handlePositionChange}
                                     onRemove={removeImage}
+                                    onBringToFront={bringToFront}
                                 />
                             ))}
                         </AnimatePresence>
