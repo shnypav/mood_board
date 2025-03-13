@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 
 interface Image {
     id: string;
@@ -13,15 +13,51 @@ interface ImageContextType {
     removeImage: (id: string) => Promise<void>;
     updateImagePosition: (id: string, position: { x: number, y: number }) => void;
     bringToFront: (id: string) => void;
+    clearAllImages: () => void;
     isLoading: boolean;
 }
+
+const LOCAL_STORAGE_KEY = 'moodboard_images';
+const LOCAL_STORAGE_MAX_Z_INDEX_KEY = 'moodboard_max_z_index';
 
 const ImageContext = createContext<ImageContextType | undefined>(undefined);
 
 export const ImageProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [images, setImages] = useState<Image[]>([]);
-    const [isLoading] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
     const [maxZIndex, setMaxZIndex] = useState(1);
+
+    // Load images from localStorage on initial render
+    useEffect(() => {
+        const loadImages = async () => {
+            try {
+                const savedImages = localStorage.getItem(LOCAL_STORAGE_KEY);
+                const savedMaxZIndex = localStorage.getItem(LOCAL_STORAGE_MAX_Z_INDEX_KEY);
+
+                if (savedImages) {
+                    setImages(JSON.parse(savedImages));
+                }
+
+                if (savedMaxZIndex) {
+                    setMaxZIndex(JSON.parse(savedMaxZIndex));
+                }
+            } catch (error) {
+                console.error('Failed to load images from localStorage:', error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        loadImages();
+    }, []);
+
+    // Save images to localStorage whenever they change
+    useEffect(() => {
+        if (!isLoading) {
+            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(images));
+            localStorage.setItem(LOCAL_STORAGE_MAX_Z_INDEX_KEY, JSON.stringify(maxZIndex));
+        }
+    }, [images, maxZIndex, isLoading]);
 
     const addImage = (imageUrl: string) => {
         const newZIndex = maxZIndex + 1;
@@ -61,6 +97,13 @@ export const ImageProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         );
     };
 
+    const clearAllImages = () => {
+        setImages([]);
+        setMaxZIndex(1);
+        localStorage.removeItem(LOCAL_STORAGE_KEY);
+        localStorage.removeItem(LOCAL_STORAGE_MAX_Z_INDEX_KEY);
+    };
+
     return (
         <ImageContext.Provider value={{
             images,
@@ -68,6 +111,7 @@ export const ImageProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             removeImage,
             updateImagePosition,
             bringToFront,
+            clearAllImages,
             isLoading
         }}>
             {children}
