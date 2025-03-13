@@ -38,9 +38,18 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
                                 onClick={() => onPredefinedColorClick(color)}
                             />
                         ))}
+                        {/* Rainbow gradient button with softer pastel colors */}
+                        <button
+                            key="rainbow"
+                            className="w-8 h-8 rounded-full border overflow-hidden"
+                            style={{
+                                background: 'linear-gradient(to right, #ffd6da, #ffefd6, #ffffd6, #e3ffd6, #d6f0ff, #efe3ff)'
+                            }}
+                            onClick={() => onPredefinedColorClick('rainbow')}
+                        />
                     </div>
                     <SketchPicker
-                        color={backgroundColor}
+                        color={backgroundColor !== 'rainbow' ? backgroundColor : '#ffffff'}
                         onChange={onColorChange}
                         disableAlpha
                     />

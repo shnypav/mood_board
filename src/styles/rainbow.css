@@ -1,0 +1,15 @@
+@keyframes rainbow-animation {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.rainbow-background {
+  background: linear-gradient(
+    to right,
+    #ffd6da, #ffefd6, #ffffd6, #e3ffd6, #d6f0ff, #efe3ff
+  );
+  background-size: 200% 200%;
+  animation: rainbow-animation 15s ease infinite;
+  opacity: 0.4; /* Making it even more subtle */
+}

@@ -11,6 +11,7 @@ import { ImageCard } from './ImageCard';
 import { EmptyState } from './EmptyState';
 import { ColorPicker } from './ColorPicker';
 import { LoadingGrid } from './LoadingGrid';
+import '../../styles/rainbow.css';
 
 export const MoodBoard: React.FC = () => {
     const boardRef = useRef<HTMLDivElement>(null);
