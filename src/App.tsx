@@ -1,5 +1,6 @@
 import { ThemeProvider } from './contexts/ThemeContext';
 import { ImageProvider } from './contexts/ImageContext';
+import { ZoomProvider } from './contexts/ZoomContext';
 import { AppErrorBoundary } from './AppErrorBoundary';
 import { HeaderLayout } from './layouts/HeaderLayout';
 import { MoodBoard } from './components/MoodBoardComponent';
@@ -9,9 +10,11 @@ const App = () => {
         <AppErrorBoundary>
             <ThemeProvider>
                 <ImageProvider>
-                    <HeaderLayout>
-                        <MoodBoard />
-                    </HeaderLayout>
+                    <ZoomProvider>
+                        <HeaderLayout>
+                            <MoodBoard />
+                        </HeaderLayout>
+                    </ZoomProvider>
                 </ImageProvider>
             </ThemeProvider>
         </AppErrorBoundary>
