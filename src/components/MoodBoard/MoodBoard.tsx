@@ -164,23 +164,22 @@ export const MoodBoard: React.FC = () => {
                             style={{
                                 transform: `scale(${zoomLevel})`,
                                 transformOrigin: 'center center',
-                                transition: 'transform 0.2s ease-out'
+                                transition: 'transform 0.2s ease-out',
+                                willChange: 'transform'
                             }}
                         >
-                            <AnimatePresence>
-                                {images.map((image) => (
-                                    <ImageCard
-                                        key={image.id}
-                                        id={image.id}
-                                        imageUrl={image.imageUrl}
-                                        position={image.position}
-                                        zIndex={image.zIndex || 1}
-                                        onPositionChange={handlePositionChange}
-                                        onRemove={removeImage}
-                                        onBringToFront={bringToFront}
-                                    />
-                                ))}
-                            </AnimatePresence>
+                            {images.map((image) => (
+                                <ImageCard
+                                    key={image.id}
+                                    id={image.id}
+                                    imageUrl={image.imageUrl}
+                                    position={image.position}
+                                    zIndex={image.zIndex || 1}
+                                    onPositionChange={handlePositionChange}
+                                    onRemove={removeImage}
+                                    onBringToFront={bringToFront}
+                                />
+                            ))}
                         </motion.div>
                     </div>
                 )}

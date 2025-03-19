@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/shadcn/components/ui/button';
 import { Trash2 } from 'lucide-react';
 import { useToast } from "@/shadcn/components/ui/use-toast";
 import { Skeleton } from "@/shadcn/components/ui/skeleton";
+import { useZoom } from '../../contexts/ZoomContext';
 
 export const ImageCardSkeleton: React.FC = () => (
     <div className="relative aspect-square">
@@ -26,6 +27,8 @@ export const ImageCard: React.FC<{
     const [isDragging, setIsDragging] = useState(false);
     const [dragPosition, setDragPosition] = useState({ x: position?.x || 0, y: position?.y || 0 });
     const { toast } = useToast();
+    const { zoomLevel } = useZoom();
+    const startPositionRef = useRef({ x: 0, y: 0 });
 
     const handleRemove = async (e: React.MouseEvent) => {
         e.stopPropagation();
@@ -45,14 +48,17 @@ export const ImageCard: React.FC<{
     const handleDragStart = () => {
         setIsDragging(true);
         onBringToFront(id);
+        // Store the starting position for this drag operation
+        startPositionRef.current = { ...dragPosition };
     };
 
     const handleDragEnd = (event: any, info: any) => {
         setIsDragging(false);
-        // Update the position state with the final drag position
+        // Calculate the new position based on the starting position and the offset
+        // adjusted by the zoom level
         const newPosition = {
-            x: dragPosition.x + info.offset.x,
-            y: dragPosition.y + info.offset.y
+            x: startPositionRef.current.x + (info.offset.x / zoomLevel),
+            y: startPositionRef.current.y + (info.offset.y / zoomLevel)
         };
         setDragPosition(newPosition);
         onPositionChange(id, newPosition);
@@ -65,9 +71,12 @@ export const ImageCard: React.FC<{
 
     return (
         <motion.div
-            layout
             initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
+            animate={{
+                opacity: 1,
+                x: dragPosition.x,
+                y: dragPosition.y
+            }}
             exit={{ opacity: 0 }}
             className="relative aspect-square group absolute"
             drag
@@ -82,7 +91,10 @@ export const ImageCard: React.FC<{
                 width: '200px',
                 height: '200px',
                 zIndex: isDragging ? zIndex + 1000 : zIndex, // Extra boost during drag
-                touchAction: "none"
+                touchAction: "none",
+                left: 0,
+                top: 0,
+                transform: `translate(0, 0)` // Reset transform to avoid conflicts with motion
             }}
         >
             {isLoading && <ImageCardSkeleton />}
