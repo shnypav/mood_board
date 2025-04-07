@@ -18,7 +18,15 @@ export const MoodBoard: React.FC = () => {
     const boardRef = useRef<HTMLDivElement>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const { backgroundColor, setBackgroundColor } = useTheme();
-    const { images, removeImage, updateImagePosition, bringToFront, clearAllImages, isLoading } = useImages();
+    const { 
+        images, 
+        removeImage, 
+        updateImagePosition, 
+        bringToFront, 
+        clearAllImages, 
+        duplicateImage, 
+        isLoading 
+    } = useImages();
     const { zoomLevel, zoomIn, zoomOut } = useZoom();
     const { toast } = useToast();
     const [isClearConfirmOpen, setIsClearConfirmOpen] = useState(false);
@@ -178,6 +186,7 @@ export const MoodBoard: React.FC = () => {
                                     onPositionChange={handlePositionChange}
                                     onRemove={removeImage}
                                     onBringToFront={bringToFront}
+                                    onDuplicate={duplicateImage}
                                 />
                             ))}
                         </motion.div>

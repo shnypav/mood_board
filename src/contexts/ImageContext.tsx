@@ -14,6 +14,7 @@ interface ImageContextType {
     updateImagePosition: (id: string, position: { x: number, y: number }) => void;
     bringToFront: (id: string) => void;
     clearAllImages: () => void;
+    duplicateImage: (id: string) => void;
     isLoading: boolean;
 }
 
@@ -97,6 +98,33 @@ export const ImageProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         );
     };
 
+    const duplicateImage = (id: string) => {
+        const originalImage = images.find(image => image.id === id);
+        
+        if (!originalImage) return;
+
+        const newZIndex = maxZIndex + 1;
+        setMaxZIndex(newZIndex);
+
+        // Define offset for the duplicated image
+        const offset = { x: 20, y: 20 };
+        const newPosition = originalImage.position 
+            ? { 
+                x: originalImage.position.x + offset.x, 
+                y: originalImage.position.y + offset.y 
+              } 
+            : { x: offset.x, y: offset.y };
+
+        const newImage: Image = {
+            id: Date.now().toString(),
+            imageUrl: originalImage.imageUrl,
+            position: newPosition,
+            zIndex: newZIndex
+        };
+
+        setImages(prev => [...prev, newImage]);
+    };
+
     const clearAllImages = () => {
         setImages([]);
         setMaxZIndex(1);
@@ -112,6 +140,7 @@ export const ImageProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             updateImagePosition,
             bringToFront,
             clearAllImages,
+            duplicateImage,
             isLoading
         }}>
             {children}

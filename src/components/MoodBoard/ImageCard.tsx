@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/shadcn/components/ui/button';
-import { Trash2 } from 'lucide-react';
+import { Trash2, Copy } from 'lucide-react';
 import { useToast } from "@/shadcn/components/ui/use-toast";
 import { Skeleton } from "@/shadcn/components/ui/skeleton";
 import { useZoom } from '../../contexts/ZoomContext';
@@ -20,9 +20,11 @@ export const ImageCard: React.FC<{
     onPositionChange: (id: string, position: { x: number, y: number }) => void;
     onRemove: (id: string) => Promise<void>;
     onBringToFront: (id: string) => void;
-}> = ({ id, imageUrl, position, zIndex, onPositionChange, onRemove, onBringToFront }) => {
+    onDuplicate: (id: string) => void;
+}> = ({ id, imageUrl, position, zIndex, onPositionChange, onRemove, onBringToFront, onDuplicate }) => {
     const [isHovered, setIsHovered] = useState(false);
     const [isRemoving, setIsRemoving] = useState(false);
+    const [isDuplicating, setIsDuplicating] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const [isDragging, setIsDragging] = useState(false);
     const [dragPosition, setDragPosition] = useState({ x: position?.x || 0, y: position?.y || 0 });
@@ -42,6 +44,30 @@ export const ImageCard: React.FC<{
                 description: "Failed to remove image"
             });
             setIsRemoving(false);
+        }
+    };
+
+    const handleDuplicate = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        try {
+            setIsDuplicating(true);
+            onDuplicate(id);
+            // Show success toast
+            toast({
+                title: "Success",
+                description: "Image duplicated successfully",
+            });
+        } catch (error) {
+            toast({
+                variant: "destructive",
+                title: "Error",
+                description: "Failed to duplicate image"
+            });
+        } finally {
+            // Use setTimeout to provide visual feedback
+            setTimeout(() => {
+                setIsDuplicating(false);
+            }, 300);
         }
     };
 
@@ -106,13 +132,23 @@ export const ImageCard: React.FC<{
                 onError={() => setIsLoading(false)}
             />
             <AnimatePresence>
-                {isHovered && !isRemoving && !isDragging && (
+                {isHovered && !isRemoving && !isDuplicating && !isDragging && (
                     <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="absolute inset-0 bg-black/50 rounded-lg flex items-center justify-center"
+                        className="absolute inset-0 bg-black/50 rounded-lg flex items-center justify-center gap-2"
                     >
+                        <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={handleDuplicate}
+                            disabled={isDuplicating}
+                            title="Duplicate Image"
+                            className="bg-blue-500 hover:bg-blue-600 text-white"
+                        >
+                            <Copy className="h-4 w-4" />
+                        </Button>
                         <Button
                             variant="destructive"
                             size="icon"
@@ -131,6 +167,15 @@ export const ImageCard: React.FC<{
                         className="absolute inset-0 bg-black/50 rounded-lg flex items-center justify-center"
                     >
                         <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                    </motion.div>
+                )}
+                {isDuplicating && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className="absolute inset-0 bg-blue-500/50 rounded-lg flex items-center justify-center"
+                    >
+                        <div className="w-8 h-8 border-2 border-blue-300 border-t-transparent rounded-full animate-spin" />
                     </motion.div>
                 )}
             </AnimatePresence>

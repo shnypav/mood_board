@@ -1,5 +1,5 @@
 import React from 'react';
-import { ImageCardSkeleton } from './ImageCard';
+import { ImageCardSkeleton } from './MoodBoard/ImageCard';
 
 export const LoadingGrid: React.FC = () => (
     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
