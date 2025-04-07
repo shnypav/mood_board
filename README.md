@@ -1,32 +1,33 @@
 # Mood Board Application (v0.0.0)
 
-A digital mood board application that allows users to create, customize, and manage visual collections. This interactive tool lets you arrange images on a canvas, adjust background colors, and save your creative inspirations.
+A digital mood board application that allows users to create, customize, and manage visual collections. This interactive
+tool lets you arrange images on a canvas, adjust background colors, and save your creative inspirations.
 
-![Mood Board Screenshot](placeholder-for-screenshot.png)
+![Mood Board Screenshot](images/screenshot.png)
 
 ## 🌟 Features
 
 - **Image Management**
-  - Add images to your mood board via file upload
-  - Drag and position images anywhere on the canvas
-  - Remove individual images
-  - Clear all images with confirmation dialog
+    - Add images to your mood board via file upload
+    - Drag and position images anywhere on the canvas
+    - Remove individual images
+    - Clear all images with confirmation dialog
 
 - **Interactive Canvas**
-  - Customizable background color with color picker
-  - Predefined color palette for quick selection
-  - Special background effects including rainbow gradient
-  - Zoom in/out functionality with visual indicator
+    - Customizable background color with color picker
+    - Predefined color palette for quick selection
+    - Special background effects including rainbow gradient
+    - Zoom in/out functionality with visual indicator
 
 - **Responsive Controls**
-  - Intuitive UI with animated feedback
-  - Z-index management (bring images to front)
-  - Persistent state (auto-saves to localStorage)
-  - Empty state handling with clear visuals
+    - Intuitive UI with animated feedback
+    - Z-index management (bring images to front)
+    - Persistent state (auto-saves to localStorage)
+    - Empty state handling with clear visuals
 
 - **Keyboard Shortcuts**
-  - `Ctrl+N` (or `Cmd+N` on Mac) to quickly add new images
-  - `Ctrl/Cmd` + Mouse Wheel to zoom in/out of the canvas
+    - `Ctrl+N` (or `Cmd+N` on Mac) to quickly add new images
+    - `Ctrl/Cmd` + Mouse Wheel to zoom in/out of the canvas
 
 ## 🚀 Technologies Used
 
@@ -35,8 +36,8 @@ A digital mood board application that allows users to create, customize, and man
 - **Language**: TypeScript
 - **State Management**: React Context API
 - **Styling**:
-  - Tailwind CSS with plugins (@tailwindcss/typography, @tailwindcss/forms, @tailwindcss/aspect-ratio)
-  - CSS modules for component-specific styling
+    - Tailwind CSS with plugins (@tailwindcss/typography, @tailwindcss/forms, @tailwindcss/aspect-ratio)
+    - CSS modules for component-specific styling
 - **UI Components**: Shadcn UI library
 - **Animations**: Framer Motion
 - **Form Handling**: React Hook Form
@@ -139,17 +140,17 @@ This project uses Jest and React Testing Library for testing components and func
 ### Common Issues and Solutions
 
 1. **Images not loading**
-   - Check browser console for error messages
-   - Verify image URLs are accessible
-   - Try clearing localStorage: `localStorage.clear()`
+    - Check browser console for error messages
+    - Verify image URLs are accessible
+    - Try clearing localStorage: `localStorage.clear()`
 
 2. **Drag and drop not working**
-   - Ensure you're clicking on the movable part of the image card
-   - Check if any CSS is interfering with pointer events
+    - Ensure you're clicking on the movable part of the image card
+    - Check if any CSS is interfering with pointer events
 
 3. **Changes not persisting**
-   - Verify localStorage is enabled in your browser
-   - Check for console errors related to storage quota
+    - Verify localStorage is enabled in your browser
+    - Check for console errors related to storage quota
 
 ### Development Tips
 
