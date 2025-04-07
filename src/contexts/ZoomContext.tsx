@@ -1,18 +1,28 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
+interface Position {
+    x: number;
+    y: number;
+}
+
 interface ZoomContextType {
     zoomLevel: number;
     setZoomLevel: (level: number) => void;
     zoomIn: () => void;
     zoomOut: () => void;
+    panPosition: Position;
+    setPanPosition: (position: Position) => void;
+    resetPanPosition: () => void;
 }
 
 const ZoomContext = createContext<ZoomContextType | undefined>(undefined);
 
 const ZOOM_LEVEL_KEY = 'moodboard-zoom-level';
+const PAN_POSITION_KEY = 'moodboard-pan-position';
 const MIN_ZOOM = 0.5;
 const MAX_ZOOM = 3;
 const ZOOM_STEP = 0.1;
+const DEFAULT_PAN: Position = { x: 0, y: 0 };
 
 export const ZoomProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [zoomLevel, setZoomLevel] = useState(() => {
@@ -26,6 +36,17 @@ export const ZoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
     });
 
+    const [panPosition, setPanPosition] = useState<Position>(() => {
+        try {
+            // Try to get the pan position from localStorage during initial load
+            const savedPan = localStorage.getItem(PAN_POSITION_KEY);
+            return savedPan && savedPan !== 'undefined' ? JSON.parse(savedPan) : DEFAULT_PAN;
+        } catch (error) {
+            console.error('Error reading from localStorage:', error);
+            return DEFAULT_PAN;
+        }
+    });
+
     useEffect(() => {
         try {
             // Sync with localStorage whenever zoomLevel changes
@@ -34,6 +55,15 @@ export const ZoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
             console.error('Error writing to localStorage:', error);
         }
     }, [zoomLevel]);
+
+    useEffect(() => {
+        try {
+            // Sync with localStorage whenever panPosition changes
+            localStorage.setItem(PAN_POSITION_KEY, JSON.stringify(panPosition));
+        } catch (error) {
+            console.error('Error writing to localStorage:', error);
+        }
+    }, [panPosition]);
 
     const handleSetZoomLevel = (level: number) => {
         // Ensure zoom level stays within bounds
@@ -49,12 +79,23 @@ export const ZoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
         handleSetZoomLevel(zoomLevel - ZOOM_STEP);
     };
 
+    const handleSetPanPosition = (position: Position) => {
+        setPanPosition(position);
+    };
+
+    const resetPanPosition = () => {
+        setPanPosition(DEFAULT_PAN);
+    };
+
     return (
         <ZoomContext.Provider value={{
             zoomLevel,
             setZoomLevel: handleSetZoomLevel,
             zoomIn,
-            zoomOut
+            zoomOut,
+            panPosition,
+            setPanPosition: handleSetPanPosition,
+            resetPanPosition
         }}>
             {children}
         </ZoomContext.Provider>
