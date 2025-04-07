@@ -5,13 +5,16 @@ interface Image {
     imageUrl: string;
     position?: { x: number, y: number };
     zIndex: number;
+    width?: number;
+    height?: number;
 }
 
 interface ImageContextType {
     images: Image[];
     addImage: (imageUrl: string) => void;
     removeImage: (id: string) => Promise<void>;
-    updateImagePosition: (id: string, position: { x: number, y: number }) => void;
+    updateImagePosition: (id: string, position: { x: number, y: number }, bringToFrontFlag?: boolean) => void;
+    updateImageDimensions: (id: string, dimensions: { width: number, height: number }) => void;
     bringToFront: (id: string) => void;
     clearAllImages: () => void;
     duplicateImage: (id: string) => void;
@@ -76,9 +79,11 @@ export const ImageProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         setImages(prev => prev.filter(image => image.id !== id));
     };
 
-    const updateImagePosition = (id: string, position: { x: number, y: number }) => {
-        // When updating position, also bring the image to front
-        bringToFront(id);
+    const updateImagePosition = (id: string, position: { x: number, y: number }, bringToFrontFlag: boolean = true) => {
+        // Only bring to front if explicitly requested (e.g., for dragging, not for resizing)
+        if (bringToFrontFlag) {
+            bringToFront(id);
+        }
 
         setImages(prev =>
             prev.map(image =>
@@ -119,10 +124,20 @@ export const ImageProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             id: Date.now().toString(),
             imageUrl: originalImage.imageUrl,
             position: newPosition,
-            zIndex: newZIndex
+            zIndex: newZIndex,
+            width: originalImage.width,
+            height: originalImage.height
         };
 
         setImages(prev => [...prev, newImage]);
+    };
+    
+    const updateImageDimensions = (id: string, dimensions: { width: number, height: number }) => {
+        setImages(prev =>
+            prev.map(image =>
+                image.id === id ? { ...image, width: dimensions.width, height: dimensions.height } : image
+            )
+        );
     };
 
     const clearAllImages = () => {
@@ -138,6 +153,7 @@ export const ImageProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             addImage,
             removeImage,
             updateImagePosition,
+            updateImageDimensions,
             bringToFront,
             clearAllImages,
             duplicateImage,

@@ -22,6 +22,7 @@ export const MoodBoard: React.FC = () => {
         images, 
         removeImage, 
         updateImagePosition, 
+        updateImageDimensions,
         bringToFront, 
         clearAllImages, 
         duplicateImage, 
@@ -145,8 +146,10 @@ export const MoodBoard: React.FC = () => {
         };
     }, [zoomIn, zoomOut]);
 
-    const handlePositionChange = (id: string, position: { x: number, y: number }) => {
-        updateImagePosition(id, position);
+    const handlePositionChange = (id: string, position: { x: number, y: number }, bringToFront: boolean = true) => {
+        // When position changes due to drag, we want to bring to front (default behavior)
+        // For resizing, we pass false from the ImageCard component
+        updateImagePosition(id, position, bringToFront);
     };
 
     if (isLoading) {
@@ -183,7 +186,10 @@ export const MoodBoard: React.FC = () => {
                                     imageUrl={image.imageUrl}
                                     position={image.position}
                                     zIndex={image.zIndex || 1}
+                                    width={image.width}
+                                    height={image.height}
                                     onPositionChange={handlePositionChange}
+                                    onDimensionsChange={updateImageDimensions}
                                     onRemove={removeImage}
                                     onBringToFront={bringToFront}
                                     onDuplicate={duplicateImage}
