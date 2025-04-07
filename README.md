@@ -3,6 +3,8 @@
 A digital mood board application that allows users to create, customize, and manage visual collections. This interactive
 tool lets you arrange images on a canvas, adjust background colors, and save your creative inspirations.
 
+> **Note**: This application is fully written by AI, not edited by humans.
+
 ![Mood Board Screenshot](images/screenshot.png)
 
 ## 🌟 Features
