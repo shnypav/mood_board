@@ -1,40 +1,50 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { useTheme } from '../../contexts/ThemeContext';
-import { useImages } from '../../contexts/ImageContext';
-import { useZoom } from '../../contexts/ZoomContext';
-import { Button } from '@/shadcn/components/ui/button';
-import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, MoveHorizontal, Plus, RefreshCw, ZoomIn, ZoomOut } from 'lucide-react';
-import { useToast } from "@/shadcn/components/ui/use-toast";
-import { Popover, PopoverContent, PopoverTrigger } from '@/shadcn/components/ui/popover';
-import { AddImageModal } from '../AddImageModalComponent';
-import { ImageCard } from './ImageCard';
-import { EmptyState } from './EmptyState';
-import { ColorPicker } from './ColorPicker';
-import { LoadingGrid } from './LoadingGrid';
+import React, {useState, useRef, useEffect} from 'react';
+import {motion, AnimatePresence} from 'framer-motion';
+import {useTheme} from '../../contexts/ThemeContext';
+import {useImages} from '../../contexts/ImageContext';
+import {useZoom} from '../../contexts/ZoomContext';
+import {Button} from '@/shadcn/components/ui/button';
+import {
+    ArrowDown,
+    ArrowLeft,
+    ArrowRight,
+    ArrowUp,
+    MoveHorizontal,
+    Plus,
+    RefreshCw,
+    ZoomIn,
+    ZoomOut
+} from 'lucide-react';
+import {useToast} from "@/shadcn/components/ui/use-toast";
+import {Popover, PopoverContent, PopoverTrigger} from '@/shadcn/components/ui/popover';
+import {AddImageModal} from '../AddImageModalComponent';
+import {ImageCard} from './ImageCard';
+import {EmptyState} from './EmptyState';
+import {ColorPicker} from './ColorPicker';
+import {LoadingGrid} from './LoadingGrid';
 import '../../styles/rainbow.css';
 
 export const MoodBoard: React.FC = () => {
     const boardRef = useRef<HTMLDivElement>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const { backgroundColor, setBackgroundColor } = useTheme();
-    const { 
-        images, 
-        removeImage, 
-        updateImagePosition, 
+    const {backgroundColor, setBackgroundColor} = useTheme();
+    const {
+        images,
+        removeImage,
+        updateImagePosition,
         updateImageDimensions,
-        bringToFront, 
-        clearAllImages, 
-        duplicateImage, 
-        isLoading 
+        bringToFront,
+        clearAllImages,
+        duplicateImage,
+        isLoading
     } = useImages();
-    const { zoomLevel, zoomIn, zoomOut, panPosition, setPanPosition, resetPanPosition } = useZoom();
-    const { toast } = useToast();
+    const {zoomLevel, zoomIn, zoomOut, panPosition, setPanPosition, resetPanPosition} = useZoom();
+    const {toast} = useToast();
     const [isClearConfirmOpen, setIsClearConfirmOpen] = useState(false);
     const [showZoomIndicator, setShowZoomIndicator] = useState(false);
     const [showPanIndicator, setShowPanIndicator] = useState(false);
     const [isPanning, setIsPanning] = useState(false);
-    const [startPanPoint, setStartPanPoint] = useState({ x: 0, y: 0 });
+    const [startPanPoint, setStartPanPoint] = useState({x: 0, y: 0});
     const zoomTimerRef = useRef<NodeJS.Timeout | null>(null);
     const panTimerRef = useRef<NodeJS.Timeout | null>(null);
     const PAN_STEP = 10; // pixels to pan with arrow keys
@@ -71,7 +81,7 @@ export const MoodBoard: React.FC = () => {
     // Panning functions
     const startPan = (clientX: number, clientY: number) => {
         setIsPanning(true);
-        setStartPanPoint({ x: clientX, y: clientY });
+        setStartPanPoint({x: clientX, y: clientY});
     };
 
     const updatePan = (clientX: number, clientY: number) => {
@@ -87,7 +97,7 @@ export const MoodBoard: React.FC = () => {
             });
 
             // Update the starting point for the next move
-            setStartPanPoint({ x: clientX, y: clientY });
+            setStartPanPoint({x: clientX, y: clientY});
 
             // Show pan indicator
             showPanPositionIndicator();
@@ -102,8 +112,8 @@ export const MoodBoard: React.FC = () => {
     const handleMouseDown = (e: React.MouseEvent) => {
         // Only start panning if we're clicking on the board background, not on an image
         const target = e.target as HTMLElement;
-        if (e.target === e.currentTarget || 
-            target.classList.contains('board-container') || 
+        if (e.target === e.currentTarget ||
+            target.classList.contains('board-container') ||
             target.classList.contains('board-content')) {
             e.preventDefault();
             startPan(e.clientX, e.clientY);
@@ -122,8 +132,8 @@ export const MoodBoard: React.FC = () => {
     const handleTouchStart = (e: React.TouchEvent) => {
         // Only start panning if we're touching the board background, not an image
         const target = e.target as HTMLElement;
-        if (e.target === e.currentTarget || 
-            target.classList.contains('board-container') || 
+        if (e.target === e.currentTarget ||
+            target.classList.contains('board-container') ||
             target.classList.contains('board-content')) {
             startPan(e.touches[0].clientX, e.touches[0].clientY);
         }
@@ -143,8 +153,8 @@ export const MoodBoard: React.FC = () => {
     // Handle keyboard arrow keys for panning
     const handleKeyboardPan = (direction: 'up' | 'down' | 'left' | 'right') => {
         return () => {
-            const newPanPosition = { ...panPosition };
-            
+            const newPanPosition = {...panPosition};
+
             switch (direction) {
                 case 'up':
                     newPanPosition.y += PAN_STEP;
@@ -159,7 +169,7 @@ export const MoodBoard: React.FC = () => {
                     newPanPosition.x -= PAN_STEP;
                     break;
             }
-            
+
             setPanPosition(newPanPosition);
             showPanPositionIndicator();
         };
@@ -174,12 +184,12 @@ export const MoodBoard: React.FC = () => {
     // Show pan position indicator
     const showPanPositionIndicator = () => {
         setShowPanIndicator(true);
-        
+
         // Clear any existing timer
         if (panTimerRef.current) {
             clearTimeout(panTimerRef.current);
         }
-        
+
         // Set a new timer to hide the indicator after 2 seconds
         panTimerRef.current = setTimeout(() => {
             setShowPanIndicator(false);
@@ -224,7 +234,7 @@ export const MoodBoard: React.FC = () => {
                 event.preventDefault(); // Prevent default browser behavior
                 handleOpenModal();
             }
-            
+
             // Arrow key panning
             if (!event.ctrlKey && !event.metaKey && !event.shiftKey && !event.altKey) {
                 switch (event.key) {
@@ -284,7 +294,7 @@ export const MoodBoard: React.FC = () => {
 
         const boardElement = boardRef.current;
         if (boardElement) {
-            boardElement.addEventListener('wheel', handleWheel, { passive: false });
+            boardElement.addEventListener('wheel', handleWheel, {passive: false});
         }
 
         return () => {
@@ -300,10 +310,7 @@ export const MoodBoard: React.FC = () => {
         updateImagePosition(id, position, bringToFront);
     };
 
-    if (isLoading) {
-        return <LoadingGrid />;
-    }
-
+    // Add touch event listener effect - moved to top level to avoid hooks rule violation
     useEffect(() => {
         // Add passive: false to the touch move event listener to allow preventDefault()
         const boardElement = boardRef.current;
@@ -313,21 +320,26 @@ export const MoodBoard: React.FC = () => {
                     e.preventDefault();
                 }
             };
-            
-            boardElement.addEventListener('touchmove', touchMoveHandler, { passive: false });
-            
+
+            boardElement.addEventListener('touchmove', touchMoveHandler, {passive: false});
+
             return () => {
                 boardElement.removeEventListener('touchmove', touchMoveHandler);
             };
         }
     }, [isPanning]);
 
+    if (isLoading) {
+        return <LoadingGrid/>;
+    }
+
     return (
         <div
-            className="relative min-h-[600px] p-4 overflow-hidden"
-            style={{ 
+            className={`relative min-h-[600px] p-4 overflow-hidden ${backgroundColor === 'rainbow' ? 'rainbow-background' : ''}`}
+            style={{
                 height: '100vh',
-                cursor: isPanning ? 'grabbing' : 'grab'
+                cursor: isPanning ? 'grabbing' : 'grab',
+                backgroundColor: backgroundColor === 'rainbow' ? 'transparent' : backgroundColor
             }}
             ref={boardRef}
             onMouseDown={handleMouseDown}
@@ -340,20 +352,19 @@ export const MoodBoard: React.FC = () => {
         >
             <AnimatePresence>
                 {images.length === 0 ? (
-                    <EmptyState onAddClick={handleOpenModal} />
+                    <EmptyState onAddClick={handleOpenModal}/>
                 ) : (
                     <div className="relative w-full h-full board-container">
                         <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
+                            initial={{opacity: 0}}
+                            animate={{opacity: 1}}
+                            exit={{opacity: 0}}
                             className="relative w-full h-full board-content"
                             style={{
                                 transform: `scale(${zoomLevel}) translate(${panPosition.x}px, ${panPosition.y}px)`,
                                 transformOrigin: 'center center',
                                 transition: isPanning ? 'none' : 'transform 0.2s ease-out',
-                                willChange: 'transform',
-                                backgroundColor
+                                willChange: 'transform'
                             }}
                         >
                             {images.map((image) => (
@@ -377,36 +388,40 @@ export const MoodBoard: React.FC = () => {
                 )}
             </AnimatePresence>
 
-            {/* UI Controls - Outside of the zoom container */}
-            <div className="fixed bottom-8 right-8 flex flex-col space-y-4">
+            {/* Add Image button - Centered at bottom */}
+            <div className="fixed bottom-8 left-1/2 transform -translate-x-1/2">
                 <Button
-                    className="rounded-full h-14 w-14 shadow-lg"
+                    className="rounded-full h-16 w-16 shadow-lg"
                     onClick={handleOpenModal}
                     size="icon"
                     title="Add Image (Ctrl+N)"
                 >
-                    <Plus className="h-6 w-6" />
+                    <Plus className="h-7 w-7"/>
                 </Button>
+            </div>
 
-                <div className="flex space-x-2">
-                    <div className="flex flex-col space-y-2">
+            {/* UI Controls - Organized on the right side */}
+            <div className="fixed bottom-8 right-8">
+                <div className="flex flex-col space-y-4 items-end">
+                    {/* Zoom Controls */}
+                    <div className="flex space-x-2">
                         <Button
-                            className="rounded-full h-14 w-14 shadow-lg"
+                            className="rounded-full h-12 w-12 shadow-lg"
                             variant="outline"
                             size="icon"
                             onClick={handleZoomChange(zoomIn)}
                             title="Zoom In (Cmd/Ctrl + Mouse Wheel Up)"
                         >
-                            <ZoomIn className="h-6 w-6" />
+                            <ZoomIn className="h-5 w-5"/>
                         </Button>
                         <Button
-                            className="rounded-full h-14 w-14 shadow-lg"
+                            className="rounded-full h-12 w-12 shadow-lg"
                             variant="outline"
                             size="icon"
                             onClick={handleZoomChange(zoomOut)}
                             title="Zoom Out (Cmd/Ctrl + Mouse Wheel Down)"
                         >
-                            <ZoomOut className="h-6 w-6" />
+                            <ZoomOut className="h-5 w-5"/>
                         </Button>
                     </div>
 
@@ -420,7 +435,7 @@ export const MoodBoard: React.FC = () => {
                             onClick={handleKeyboardPan('up')}
                             title="Pan Up (Arrow Up)"
                         >
-                            <ArrowUp className="h-4 w-4" />
+                            <ArrowUp className="h-4 w-4"/>
                         </Button>
                         <div></div>
                         <Button
@@ -430,7 +445,7 @@ export const MoodBoard: React.FC = () => {
                             onClick={handleKeyboardPan('left')}
                             title="Pan Left (Arrow Left)"
                         >
-                            <ArrowLeft className="h-4 w-4" />
+                            <ArrowLeft className="h-4 w-4"/>
                         </Button>
                         <Button
                             className="rounded-full h-10 w-10 shadow-lg"
@@ -439,7 +454,7 @@ export const MoodBoard: React.FC = () => {
                             onClick={handleResetPan}
                             title="Reset Pan Position"
                         >
-                            <MoveHorizontal className="h-4 w-4" />
+                            <MoveHorizontal className="h-4 w-4"/>
                         </Button>
                         <Button
                             className="rounded-full h-10 w-10 shadow-lg"
@@ -448,7 +463,7 @@ export const MoodBoard: React.FC = () => {
                             onClick={handleKeyboardPan('right')}
                             title="Pan Right (Arrow Right)"
                         >
-                            <ArrowRight className="h-4 w-4" />
+                            <ArrowRight className="h-4 w-4"/>
                         </Button>
                         <div></div>
                         <Button
@@ -458,49 +473,52 @@ export const MoodBoard: React.FC = () => {
                             onClick={handleKeyboardPan('down')}
                             title="Pan Down (Arrow Down)"
                         >
-                            <ArrowDown className="h-4 w-4" />
+                            <ArrowDown className="h-4 w-4"/>
                         </Button>
                         <div></div>
                     </div>
 
-                    <Popover open={isClearConfirmOpen} onOpenChange={setIsClearConfirmOpen}>
-                        <PopoverTrigger asChild>
-                            <Button
-                                className="rounded-full h-14 w-14 shadow-lg"
-                                variant="outline"
-                                size="icon"
-                                title="Clear All Images"
-                            >
-                                <RefreshCw className="h-6 w-6" />
-                            </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-80">
-                            <div className="space-y-4">
-                                <h4 className="font-medium">Clear all images?</h4>
-                                <p className="text-sm text-muted-foreground">
-                                    This will remove all images from your mood board. This action cannot be undone.
-                                </p>
-                                <div className="flex justify-end space-x-2">
-                                    <Button
-                                        variant="outline"
-                                        onClick={() => setIsClearConfirmOpen(false)}
-                                    >
-                                        Cancel
-                                    </Button>
-                                    <Button
-                                        variant="destructive"
-                                        onClick={handleClearAllImages}
-                                    >
-                                        Clear All
-                                    </Button>
+                    {/* Clear All Button */}
+                    <div className="flex justify-end">
+                        <Popover open={isClearConfirmOpen} onOpenChange={setIsClearConfirmOpen}>
+                            <PopoverTrigger asChild>
+                                <Button
+                                    className="rounded-full h-12 w-12 shadow-lg"
+                                    variant="outline"
+                                    size="icon"
+                                    title="Clear All Images"
+                                >
+                                    <RefreshCw className="h-5 w-5"/>
+                                </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-80">
+                                <div className="space-y-4">
+                                    <h4 className="font-medium">Clear all images?</h4>
+                                    <p className="text-sm text-muted-foreground">
+                                        This will remove all images from your mood board. This action cannot be undone.
+                                    </p>
+                                    <div className="flex justify-end space-x-2">
+                                        <Button
+                                            variant="outline"
+                                            onClick={() => setIsClearConfirmOpen(false)}
+                                        >
+                                            Cancel
+                                        </Button>
+                                        <Button
+                                            variant="destructive"
+                                            onClick={handleClearAllImages}
+                                        >
+                                            Clear All
+                                        </Button>
+                                    </div>
                                 </div>
-                            </div>
-                        </PopoverContent>
-                    </Popover>
+                            </PopoverContent>
+                        </Popover>
+                    </div>
                 </div>
             </div>
 
-            <AddImageModal isOpen={isModalOpen} onClose={handleCloseModal} />
+            <AddImageModal isOpen={isModalOpen} onClose={handleCloseModal}/>
             <ColorPicker
                 backgroundColor={backgroundColor}
                 onColorChange={handleColorChange}
@@ -512,10 +530,10 @@ export const MoodBoard: React.FC = () => {
             <AnimatePresence>
                 {showZoomIndicator && (
                     <motion.div
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: 10 }}
-                        transition={{ duration: 0.2 }}
+                        initial={{opacity: 0, y: 10}}
+                        animate={{opacity: 1, y: 0}}
+                        exit={{opacity: 0, y: 10}}
+                        transition={{duration: 0.2}}
                         className="fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-white bg-opacity-70 px-3 py-1 rounded-md shadow-sm text-xs"
                     >
                         Zoom: {Math.round(zoomLevel * 100)}%
@@ -527,10 +545,10 @@ export const MoodBoard: React.FC = () => {
             <AnimatePresence>
                 {showPanIndicator && (
                     <motion.div
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: 10 }}
-                        transition={{ duration: 0.2 }}
+                        initial={{opacity: 0, y: 10}}
+                        animate={{opacity: 1, y: 0}}
+                        exit={{opacity: 0, y: 10}}
+                        transition={{duration: 0.2}}
                         className="fixed bottom-12 left-1/2 transform -translate-x-1/2 bg-white bg-opacity-70 px-3 py-1 rounded-md shadow-sm text-xs"
                     >
                         Pan: X: {Math.round(panPosition.x)}, Y: {Math.round(panPosition.y)}
