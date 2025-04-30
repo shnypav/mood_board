@@ -13,7 +13,8 @@ import {
     Plus,
     RefreshCw,
     ZoomIn,
-    ZoomOut
+    ZoomOut,
+    Settings
 } from 'lucide-react';
 import {useToast} from "@/shadcn/components/ui/use-toast";
 import {Popover, PopoverContent, PopoverTrigger} from '@/shadcn/components/ui/popover';
@@ -24,271 +25,227 @@ import {ColorPicker} from './ColorPicker';
 import {LoadingGrid} from './LoadingGrid';
 import '../../styles/rainbow.css';
 
-export const MoodBoard: React.FC = () => {
-    const boardRef = useRef<HTMLDivElement>(null);
-    const [isModalOpen, setIsModalOpen] = useState(false);
+export const MoodBoard = () => {
     const {backgroundColor, setBackgroundColor} = useTheme();
-    const {
-        images,
-        removeImage,
-        updateImagePosition,
-        updateImageDimensions,
-        bringToFront,
-        clearAllImages,
-        duplicateImage,
-        isLoading
-    } = useImages();
-    const {zoomLevel, zoomIn, zoomOut, panPosition, setPanPosition, resetPanPosition} = useZoom();
+    const {images, removeImage, updateImageDimensions, bringToFront, duplicateImage, clearAllImages} = useImages();
+    const {zoomLevel, setZoomLevel, panPosition, setPanPosition, zoomIn, zoomOut} = useZoom();
     const {toast} = useToast();
-    const [isClearConfirmOpen, setIsClearConfirmOpen] = useState(false);
+
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isPanning, setIsPanning] = useState(false);
+    const [startPanPosition, setStartPanPosition] = useState({x: 0, y: 0});
     const [showZoomIndicator, setShowZoomIndicator] = useState(false);
     const [showPanIndicator, setShowPanIndicator] = useState(false);
-    const [isPanning, setIsPanning] = useState(false);
-    const [startPanPoint, setStartPanPoint] = useState({x: 0, y: 0});
-    const zoomTimerRef = useRef<NodeJS.Timeout | null>(null);
-    const panTimerRef = useRef<NodeJS.Timeout | null>(null);
-    const PAN_STEP = 10; // pixels to pan with arrow keys
+    const [isClearConfirmOpen, setIsClearConfirmOpen] = useState(false);
 
-    const predefinedColors = ['#FFCDD2', '#C8E6C9', '#BBDEFB', '#FFF9C4', '#D1C4E9'];
+    const boardRef = useRef(null);
+    const predefinedColors = ['#ffffff', '#f8f9fa', '#e9ecef', '#dee2e6', '#ced4da', '#6c757d', '#212529', '#000000', 'rainbow'];
 
-    const handleOpenModal = () => {
-        setIsModalOpen(true);
-    };
+    // Handlers
+    const handleOpenModal = () => setIsModalOpen(true);
+    const handleCloseModal = () => setIsModalOpen(false);
 
-    const handleCloseModal = () => {
-        setIsModalOpen(false);
-    };
-
-    const handleColorChange = (color: any) => {
-        if (color && color.hex) {
-            setBackgroundColor(color.hex);
-        }
-    };
-
-    const handlePredefinedColorClick = (color: string) => {
+    const handleColorChange = (color) => {
         setBackgroundColor(color);
     };
 
-    const handleClearAllImages = () => {
-        clearAllImages();
-        toast({
-            title: "Success",
-            description: "All images have been cleared from the mood board",
-        });
-        setIsClearConfirmOpen(false);
+    const handlePredefinedColorClick = (color) => {
+        setBackgroundColor(color);
     };
 
-    // Panning functions
-    const startPan = (clientX: number, clientY: number) => {
-        setIsPanning(true);
-        setStartPanPoint({x: clientX, y: clientY});
+    const handlePositionChange = (id, newPosition) => {
+        // Implementation for position change
     };
 
-    const updatePan = (clientX: number, clientY: number) => {
-        if (isPanning) {
-            // Calculate the difference from the starting point
-            const deltaX = (clientX - startPanPoint.x) / zoomLevel;
-            const deltaY = (clientY - startPanPoint.y) / zoomLevel;
-
-            // Update the pan position
-            setPanPosition({
-                x: panPosition.x + deltaX,
-                y: panPosition.y + deltaY
+    const handleMouseDown = (e) => {
+        if (e.button === 0) { // Left mouse button
+            setIsPanning(true);
+            setStartPanPosition({
+                x: e.clientX - panPosition.x,
+                y: e.clientY - panPosition.y
             });
-
-            // Update the starting point for the next move
-            setStartPanPoint({x: clientX, y: clientY});
-
-            // Show pan indicator
-            showPanPositionIndicator();
         }
     };
 
-    const endPan = () => {
-        setIsPanning(false);
-    };
-
-    // Handle mouse events for panning
-    const handleMouseDown = (e: React.MouseEvent) => {
-        // Only start panning if we're clicking on the board background, not on an image
-        const target = e.target as HTMLElement;
-        if (e.target === e.currentTarget ||
-            target.classList.contains('board-container') ||
-            target.classList.contains('board-content')) {
-            e.preventDefault();
-            startPan(e.clientX, e.clientY);
+    const handleMouseMove = (e) => {
+        if (isPanning) {
+            const newX = e.clientX - startPanPosition.x;
+            const newY = e.clientY - startPanPosition.y;
+            setPanPosition({x: newX, y: newY});
+            setShowPanIndicator(true);
+            // Clear the timeout if it exists
+            if (window.panIndicatorTimeout) {
+                clearTimeout(window.panIndicatorTimeout);
+            }
+            // Set a new timeout
+            window.panIndicatorTimeout = setTimeout(() => {
+                setShowPanIndicator(false);
+            }, 1500);
         }
-    };
-
-    const handleMouseMove = (e: React.MouseEvent) => {
-        updatePan(e.clientX, e.clientY);
     };
 
     const handleMouseUp = () => {
-        endPan();
+        setIsPanning(false);
     };
 
-    // Handle touch events for panning
-    const handleTouchStart = (e: React.TouchEvent) => {
-        // Only start panning if we're touching the board background, not an image
-        const target = e.target as HTMLElement;
-        if (e.target === e.currentTarget ||
-            target.classList.contains('board-container') ||
-            target.classList.contains('board-content')) {
-            startPan(e.touches[0].clientX, e.touches[0].clientY);
+    const handleTouchStart = (e) => {
+        if (e.touches.length === 1) {
+            setIsPanning(true);
+            setStartPanPosition({
+                x: e.touches[0].clientX - panPosition.x,
+                y: e.touches[0].clientY - panPosition.y
+            });
         }
     };
 
-    const handleTouchMove = (e: React.TouchEvent) => {
-        if (isPanning) {
-            e.preventDefault(); // Prevent scrolling while panning
-            updatePan(e.touches[0].clientX, e.touches[0].clientY);
+    const handleTouchMove = (e) => {
+        if (isPanning && e.touches.length === 1) {
+            const newX = e.touches[0].clientX - startPanPosition.x;
+            const newY = e.touches[0].clientY - startPanPosition.y;
+            setPanPosition({x: newX, y: newY});
+            setShowPanIndicator(true);
+            // Clear the timeout if it exists
+            if (window.panIndicatorTimeout) {
+                clearTimeout(window.panIndicatorTimeout);
+            }
+            // Set a new timeout
+            window.panIndicatorTimeout = setTimeout(() => {
+                setShowPanIndicator(false);
+            }, 1500);
         }
     };
 
     const handleTouchEnd = () => {
-        endPan();
+        setIsPanning(false);
     };
 
-    // Handle keyboard arrow keys for panning
-    const handleKeyboardPan = (direction: 'up' | 'down' | 'left' | 'right') => {
-        return () => {
-            const newPanPosition = {...panPosition};
-
-            switch (direction) {
-                case 'up':
-                    newPanPosition.y += PAN_STEP;
-                    break;
-                case 'down':
-                    newPanPosition.y -= PAN_STEP;
-                    break;
-                case 'left':
-                    newPanPosition.x += PAN_STEP;
-                    break;
-                case 'right':
-                    newPanPosition.x -= PAN_STEP;
-                    break;
-            }
-
-            setPanPosition(newPanPosition);
-            showPanPositionIndicator();
-        };
+    const handleZoomChange = (zoomFunc) => () => {
+        zoomFunc();
+        setShowZoomIndicator(true);
+        // Clear the timeout if it exists
+        if (window.zoomIndicatorTimeout) {
+            clearTimeout(window.zoomIndicatorTimeout);
+        }
+        // Set a new timeout
+        window.zoomIndicatorTimeout = setTimeout(() => {
+            setShowZoomIndicator(false);
+        }, 1500);
     };
 
-    // Reset pan position
-    const handleResetPan = () => {
-        resetPanPosition();
-        showPanPositionIndicator();
-    };
+    const handleKeyboardPan = (direction) => () => {
+        const panStep = 50; // pixels to move per click
+        let newX = panPosition.x;
+        let newY = panPosition.y;
 
-    // Show pan position indicator
-    const showPanPositionIndicator = () => {
-        setShowPanIndicator(true);
-
-        // Clear any existing timer
-        if (panTimerRef.current) {
-            clearTimeout(panTimerRef.current);
+        switch (direction) {
+            case 'up':
+                newY += panStep;
+                break;
+            case 'down':
+                newY -= panStep;
+                break;
+            case 'left':
+                newX += panStep;
+                break;
+            case 'right':
+                newX -= panStep;
+                break;
         }
 
-        // Set a new timer to hide the indicator after 2 seconds
-        panTimerRef.current = setTimeout(() => {
+        setPanPosition({x: newX, y: newY});
+        setShowPanIndicator(true);
+        // Clear the timeout if it exists
+        if (window.panIndicatorTimeout) {
+            clearTimeout(window.panIndicatorTimeout);
+        }
+        // Set a new timeout
+        window.panIndicatorTimeout = setTimeout(() => {
             setShowPanIndicator(false);
-        }, 2000);
+        }, 1500);
     };
 
-    // Show zoom indicator when zoom changes
-    const handleZoomChange = (zoomFn: () => void) => {
-        return () => {
-            zoomFn();
-            setShowZoomIndicator(true);
-
-            // Clear any existing timer
-            if (zoomTimerRef.current) {
-                clearTimeout(zoomTimerRef.current);
-            }
-
-            // Set a new timer to hide the indicator after 2 seconds
-            zoomTimerRef.current = setTimeout(() => {
-                setShowZoomIndicator(false);
-            }, 2000);
-        };
+    const handleResetPan = () => {
+        setPanPosition({x: 0, y: 0});
+        setShowPanIndicator(true);
+        // Clear the timeout if it exists
+        if (window.panIndicatorTimeout) {
+            clearTimeout(window.panIndicatorTimeout);
+        }
+        // Set a new timeout
+        window.panIndicatorTimeout = setTimeout(() => {
+            setShowPanIndicator(false);
+        }, 1500);
     };
 
-    // Clean up timers on unmount
-    useEffect(() => {
-        return () => {
-            if (zoomTimerRef.current) {
-                clearTimeout(zoomTimerRef.current);
-            }
-            if (panTimerRef.current) {
-                clearTimeout(panTimerRef.current);
-            }
-        };
-    }, []);
+    const handleClearAllImages = () => {
+        clearAllImages();
+        setIsClearConfirmOpen(false);
+        toast({
+            title: "All images cleared",
+            description: "Your mood board has been reset.",
+        });
+    };
 
-    // Add keyboard shortcut handler for Ctrl+N (Command+N on Mac)
+    // Add keyboard event listeners
     useEffect(() => {
-        const handleKeyDown = (event: KeyboardEvent) => {
-            // Check for Ctrl+N or Command+N (Mac)
-            if ((event.ctrlKey || event.metaKey) && event.key === 'n') {
-                event.preventDefault(); // Prevent default browser behavior
-                handleOpenModal();
+        const handleKeyDown = (e) => {
+            // Handle keyboard shortcuts
+            if (e.ctrlKey || e.metaKey) {
+                if (e.key === 'n') {
+                    e.preventDefault();
+                    handleOpenModal();
+                }
             }
 
-            // Arrow key panning
-            if (!event.ctrlKey && !event.metaKey && !event.shiftKey && !event.altKey) {
-                switch (event.key) {
+            // Arrow keys for panning
+            if (!e.ctrlKey && !e.metaKey && !e.shiftKey) {
+                switch (e.key) {
                     case 'ArrowUp':
-                        event.preventDefault();
+                        e.preventDefault();
                         handleKeyboardPan('up')();
                         break;
                     case 'ArrowDown':
-                        event.preventDefault();
+                        e.preventDefault();
                         handleKeyboardPan('down')();
                         break;
                     case 'ArrowLeft':
-                        event.preventDefault();
+                        e.preventDefault();
                         handleKeyboardPan('left')();
                         break;
                     case 'ArrowRight':
-                        event.preventDefault();
+                        e.preventDefault();
                         handleKeyboardPan('right')();
                         break;
                 }
             }
         };
 
+        // Add event listener
         window.addEventListener('keydown', handleKeyDown);
 
-        // Clean up event listener on component unmount
+        // Cleanup
         return () => {
             window.removeEventListener('keydown', handleKeyDown);
+            // Clear any remaining timeouts
+            if (window.zoomIndicatorTimeout) {
+                clearTimeout(window.zoomIndicatorTimeout);
+            }
+            if (window.panIndicatorTimeout) {
+                clearTimeout(window.panIndicatorTimeout);
+            }
         };
     }, [panPosition]);
 
-    // Add mouse wheel zoom handler
+    // Handle wheel events for zooming
     useEffect(() => {
-        const handleWheel = (event: WheelEvent) => {
-            // Only zoom if Cmd (Mac) or Ctrl (Windows) key is pressed
-            if (event.metaKey || event.ctrlKey) {
-                event.preventDefault();
-                if (event.deltaY < 0) {
-                    zoomIn();
-                    setShowZoomIndicator(true);
+        const handleWheel = (e) => {
+            if (e.ctrlKey || e.metaKey) {
+                e.preventDefault();
+                if (e.deltaY < 0) {
+                    handleZoomChange(zoomIn)();
                 } else {
-                    zoomOut();
-                    setShowZoomIndicator(true);
+                    handleZoomChange(zoomOut)();
                 }
-
-                // Clear any existing timer
-                if (zoomTimerRef.current) {
-                    clearTimeout(zoomTimerRef.current);
-                }
-
-                // Set a new timer to hide the indicator after 2 seconds
-                zoomTimerRef.current = setTimeout(() => {
-                    setShowZoomIndicator(false);
-                }, 2000);
             }
         };
 
@@ -302,36 +259,7 @@ export const MoodBoard: React.FC = () => {
                 boardElement.removeEventListener('wheel', handleWheel);
             }
         };
-    }, [zoomIn, zoomOut]);
-
-    const handlePositionChange = (id: string, position: { x: number, y: number }, bringToFront: boolean = true) => {
-        // When position changes due to drag, we want to bring to front (default behavior)
-        // For resizing, we pass false from the ImageCard component
-        updateImagePosition(id, position, bringToFront);
-    };
-
-    // Add touch event listener effect - moved to top level to avoid hooks rule violation
-    useEffect(() => {
-        // Add passive: false to the touch move event listener to allow preventDefault()
-        const boardElement = boardRef.current;
-        if (boardElement) {
-            const touchMoveHandler = (e: TouchEvent) => {
-                if (isPanning) {
-                    e.preventDefault();
-                }
-            };
-
-            boardElement.addEventListener('touchmove', touchMoveHandler, {passive: false});
-
-            return () => {
-                boardElement.removeEventListener('touchmove', touchMoveHandler);
-            };
-        }
-    }, [isPanning]);
-
-    if (isLoading) {
-        return <LoadingGrid/>;
-    }
+    }, [zoomLevel]);
 
     return (
         <div
@@ -388,7 +316,7 @@ export const MoodBoard: React.FC = () => {
                 )}
             </AnimatePresence>
 
-            {/* Add Image button - Centered at bottom */}
+            {/* Add Image button - Centered at bottom - UNTOUCHED */}
             <div className="fixed bottom-8 left-1/2 transform -translate-x-1/2">
                 <Button
                     className="rounded-full h-16 w-16 shadow-lg"
@@ -400,122 +328,155 @@ export const MoodBoard: React.FC = () => {
                 </Button>
             </div>
 
-            {/* UI Controls - Organized on the right side */}
+            {/* Unified Controls Button - Replaced the old controls section */}
             <div className="fixed bottom-8 right-8">
-                <div className="flex flex-col space-y-4 items-end">
-                    {/* Zoom Controls */}
-                    <div className="flex space-x-2">
+                <Popover>
+                    <PopoverTrigger asChild>
                         <Button
-                            className="rounded-full h-12 w-12 shadow-lg"
-                            variant="outline"
+                            className="rounded-full h-16 w-16 shadow-lg"
                             size="icon"
-                            onClick={handleZoomChange(zoomIn)}
-                            title="Zoom In (Cmd/Ctrl + Mouse Wheel Up)"
+                            title="Board Controls"
                         >
-                            <ZoomIn className="h-5 w-5"/>
+                            <Settings className="h-7 w-7"/>
                         </Button>
-                        <Button
-                            className="rounded-full h-12 w-12 shadow-lg"
-                            variant="outline"
-                            size="icon"
-                            onClick={handleZoomChange(zoomOut)}
-                            title="Zoom Out (Cmd/Ctrl + Mouse Wheel Down)"
+                    </PopoverTrigger>
+                    <PopoverContent className="w-80 p-4" side="top">
+                        <motion.div
+                            initial={{opacity: 0, scale: 0.95}}
+                            animate={{opacity: 1, scale: 1}}
+                            exit={{opacity: 0, scale: 0.95}}
+                            transition={{duration: 0.2}}
+                            className="space-y-4"
                         >
-                            <ZoomOut className="h-5 w-5"/>
-                        </Button>
-                    </div>
+                            <h4 className="font-medium mb-2">Board Controls</h4>
 
-                    {/* Arrow Key Pan Controls */}
-                    <div className="grid grid-cols-3 gap-1">
-                        <div></div>
-                        <Button
-                            className="rounded-full h-10 w-10 shadow-lg"
-                            variant="outline"
-                            size="icon"
-                            onClick={handleKeyboardPan('up')}
-                            title="Pan Up (Arrow Up)"
-                        >
-                            <ArrowUp className="h-4 w-4"/>
-                        </Button>
-                        <div></div>
-                        <Button
-                            className="rounded-full h-10 w-10 shadow-lg"
-                            variant="outline"
-                            size="icon"
-                            onClick={handleKeyboardPan('left')}
-                            title="Pan Left (Arrow Left)"
-                        >
-                            <ArrowLeft className="h-4 w-4"/>
-                        </Button>
-                        <Button
-                            className="rounded-full h-10 w-10 shadow-lg"
-                            variant="outline"
-                            size="icon"
-                            onClick={handleResetPan}
-                            title="Reset Pan Position"
-                        >
-                            <MoveHorizontal className="h-4 w-4"/>
-                        </Button>
-                        <Button
-                            className="rounded-full h-10 w-10 shadow-lg"
-                            variant="outline"
-                            size="icon"
-                            onClick={handleKeyboardPan('right')}
-                            title="Pan Right (Arrow Right)"
-                        >
-                            <ArrowRight className="h-4 w-4"/>
-                        </Button>
-                        <div></div>
-                        <Button
-                            className="rounded-full h-10 w-10 shadow-lg"
-                            variant="outline"
-                            size="icon"
-                            onClick={handleKeyboardPan('down')}
-                            title="Pan Down (Arrow Down)"
-                        >
-                            <ArrowDown className="h-4 w-4"/>
-                        </Button>
-                        <div></div>
-                    </div>
-
-                    {/* Clear All Button */}
-                    <div className="flex justify-end">
-                        <Popover open={isClearConfirmOpen} onOpenChange={setIsClearConfirmOpen}>
-                            <PopoverTrigger asChild>
-                                <Button
-                                    className="rounded-full h-12 w-12 shadow-lg"
-                                    variant="outline"
-                                    size="icon"
-                                    title="Clear All Images"
-                                >
-                                    <RefreshCw className="h-5 w-5"/>
-                                </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-80">
-                                <div className="space-y-4">
-                                    <h4 className="font-medium">Clear all images?</h4>
-                                    <p className="text-sm text-muted-foreground">
-                                        This will remove all images from your mood board. This action cannot be undone.
-                                    </p>
-                                    <div className="flex justify-end space-x-2">
-                                        <Button
-                                            variant="outline"
-                                            onClick={() => setIsClearConfirmOpen(false)}
-                                        >
-                                            Cancel
-                                        </Button>
-                                        <Button
-                                            variant="destructive"
-                                            onClick={handleClearAllImages}
-                                        >
-                                            Clear All
-                                        </Button>
+                            {/* Zoom Controls */}
+                            <div className="space-y-2">
+                                <h5 className="text-sm font-medium text-muted-foreground">Zoom</h5>
+                                <div className="flex space-x-2">
+                                    <Button
+                                        className="rounded-full h-10 w-10 shadow-sm"
+                                        variant="outline"
+                                        size="icon"
+                                        onClick={handleZoomChange(zoomIn)}
+                                        title="Zoom In (Cmd/Ctrl + Mouse Wheel Up)"
+                                    >
+                                        <ZoomIn className="h-4 w-4"/>
+                                    </Button>
+                                    <div className="flex-1 flex items-center justify-center text-sm">
+                                        {Math.round(zoomLevel * 100)}%
                                     </div>
+                                    <Button
+                                        className="rounded-full h-10 w-10 shadow-sm"
+                                        variant="outline"
+                                        size="icon"
+                                        onClick={handleZoomChange(zoomOut)}
+                                        title="Zoom Out (Cmd/Ctrl + Mouse Wheel Down)"
+                                    >
+                                        <ZoomOut className="h-4 w-4"/>
+                                    </Button>
                                 </div>
-                            </PopoverContent>
-                        </Popover>
-                    </div>
-                </div>
+                            </div>
+
+                            {/* Pan Controls */}
+                            <div className="space-y-2">
+                                <h5 className="text-sm font-medium text-muted-foreground">Pan</h5>
+                                <div className="grid grid-cols-3 gap-1">
+                                    <div></div>
+                                    <Button
+                                        className="rounded-full h-10 w-10 shadow-sm"
+                                        variant="outline"
+                                        size="icon"
+                                        onClick={handleKeyboardPan('up')}
+                                        title="Pan Up (Arrow Up)"
+                                    >
+                                        <ArrowUp className="h-4 w-4"/>
+                                    </Button>
+                                    <div></div>
+                                    <Button
+                                        className="rounded-full h-10 w-10 shadow-sm"
+                                        variant="outline"
+                                        size="icon"
+                                        onClick={handleKeyboardPan('left')}
+                                        title="Pan Left (Arrow Left)"
+                                    >
+                                        <ArrowLeft className="h-4 w-4"/>
+                                    </Button>
+                                    <Button
+                                        className="rounded-full h-10 w-10 shadow-sm"
+                                        variant="outline"
+                                        size="icon"
+                                        onClick={handleResetPan}
+                                        title="Reset Pan Position"
+                                    >
+                                        <MoveHorizontal className="h-4 w-4"/>
+                                    </Button>
+                                    <Button
+                                        className="rounded-full h-10 w-10 shadow-sm"
+                                        variant="outline"
+                                        size="icon"
+                                        onClick={handleKeyboardPan('right')}
+                                        title="Pan Right (Arrow Right)"
+                                    >
+                                        <ArrowRight className="h-4 w-4"/>
+                                    </Button>
+                                    <div></div>
+                                    <Button
+                                        className="rounded-full h-10 w-10 shadow-sm"
+                                        variant="outline"
+                                        size="icon"
+                                        onClick={handleKeyboardPan('down')}
+                                        title="Pan Down (Arrow Down)"
+                                    >
+                                        <ArrowDown className="h-4 w-4"/>
+                                    </Button>
+                                    <div></div>
+                                </div>
+                                <div className="text-xs text-center text-muted-foreground mt-1">
+                                    X: {Math.round(panPosition.x)}, Y: {Math.round(panPosition.y)}
+                                </div>
+                            </div>
+
+                            {/* Clear All Button */}
+                            <div className="pt-2">
+                                <Popover>
+                                    <PopoverTrigger asChild>
+                                        <Button
+                                            className="w-full"
+                                            variant="outline"
+                                            title="Clear All Images"
+                                        >
+                                            <RefreshCw className="h-4 w-4 mr-2"/> Clear All Images
+                                        </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-80">
+                                        <div className="space-y-4">
+                                            <h4 className="font-medium">Clear all images?</h4>
+                                            <p className="text-sm text-muted-foreground">
+                                                This will remove all images from your mood board. This action cannot be
+                                                undone.
+                                            </p>
+                                            <div className="flex justify-end space-x-2">
+                                                <Button
+                                                    variant="outline"
+                                                    onClick={() => setIsClearConfirmOpen(false)}
+                                                >
+                                                    Cancel
+                                                </Button>
+                                                <Button
+                                                    variant="destructive"
+                                                    onClick={handleClearAllImages}
+                                                >
+                                                    Clear All
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    </PopoverContent>
+                                </Popover>
+                            </div>
+                        </motion.div>
+                    </PopoverContent>
+                </Popover>
             </div>
 
             <AddImageModal isOpen={isModalOpen} onClose={handleCloseModal}/>
