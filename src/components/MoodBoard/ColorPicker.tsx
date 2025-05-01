@@ -39,7 +39,7 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
         <Popover>
             <PopoverTrigger asChild>
                 <Button
-                    className="fixed bottom-8 left-8 rounded-full h-14 w-14 shadow-lg"
+                    className="fixed bottom-8 left-8 rounded-full h-14 w-14 shadow-lg rainbow-button"
                     size="icon"
                 >
                     <Palette className="h-6 w-6" />

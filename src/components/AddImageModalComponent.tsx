@@ -58,10 +58,10 @@ export const AddImageModal: React.FC<AddImageModalProps> = ({ isOpen, onClose })
                     />
 
                     <div className="flex justify-end space-x-2">
-                        <Button type="button" variant="outline" onClick={onClose}>
+                        <Button type="button" variant="outline" onClick={onClose} className="rainbow-button">
                             Cancel
                         </Button>
-                        <Button type="submit">
+                        <Button type="submit" className="rainbow-button">
                             Add Image
                         </Button>
                     </div>

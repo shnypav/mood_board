@@ -314,12 +314,10 @@ export const MoodBoard = () => {
                         </motion.div>
                     </div>
                 )}
-            </AnimatePresence>
-
-            {/* Add Image button - Centered at bottom - UNTOUCHED */}
+            </AnimatePresence>            {/* Add Image button - Centered at bottom - UPDATED WITH RAINBOW */}
             <div className="fixed bottom-8 left-1/2 transform -translate-x-1/2">
                 <Button
-                    className="rounded-full h-16 w-16 shadow-lg"
+                    className="rounded-full h-16 w-16 shadow-lg rainbow-button"
                     onClick={handleOpenModal}
                     size="icon"
                     title="Add Image (Ctrl+N)"
@@ -327,13 +325,12 @@ export const MoodBoard = () => {
                     <Plus className="h-7 w-7"/>
                 </Button>
             </div>
-
             {/* Unified Controls Button - Replaced the old controls section */}
             <div className="fixed bottom-8 right-8">
                 <Popover>
                     <PopoverTrigger asChild>
                         <Button
-                            className="rounded-full h-16 w-16 shadow-lg"
+                            className="rounded-full h-16 w-16 shadow-lg rainbow-button"
                             size="icon"
                             title="Board Controls"
                         >
@@ -349,13 +346,12 @@ export const MoodBoard = () => {
                             className="space-y-4"
                         >
                             <h4 className="font-medium mb-2">Board Controls</h4>
-
                             {/* Zoom Controls */}
                             <div className="space-y-2">
                                 <h5 className="text-sm font-medium text-muted-foreground">Zoom</h5>
                                 <div className="flex space-x-2">
                                     <Button
-                                        className="rounded-full h-10 w-10 shadow-sm"
+                                        className="rounded-full h-10 w-10 shadow-sm rainbow-button"
                                         variant="outline"
                                         size="icon"
                                         onClick={handleZoomChange(zoomIn)}
@@ -367,7 +363,7 @@ export const MoodBoard = () => {
                                         {Math.round(zoomLevel * 100)}%
                                     </div>
                                     <Button
-                                        className="rounded-full h-10 w-10 shadow-sm"
+                                        className="rounded-full h-10 w-10 shadow-sm rainbow-button"
                                         variant="outline"
                                         size="icon"
                                         onClick={handleZoomChange(zoomOut)}
@@ -377,14 +373,13 @@ export const MoodBoard = () => {
                                     </Button>
                                 </div>
                             </div>
-
                             {/* Pan Controls */}
                             <div className="space-y-2">
                                 <h5 className="text-sm font-medium text-muted-foreground">Pan</h5>
                                 <div className="grid grid-cols-3 gap-1">
                                     <div></div>
                                     <Button
-                                        className="rounded-full h-10 w-10 shadow-sm"
+                                        className="rounded-full h-10 w-10 shadow-sm rainbow-button"
                                         variant="outline"
                                         size="icon"
                                         onClick={handleKeyboardPan('up')}
@@ -394,7 +389,7 @@ export const MoodBoard = () => {
                                     </Button>
                                     <div></div>
                                     <Button
-                                        className="rounded-full h-10 w-10 shadow-sm"
+                                        className="rounded-full h-10 w-10 shadow-sm rainbow-button"
                                         variant="outline"
                                         size="icon"
                                         onClick={handleKeyboardPan('left')}
@@ -403,7 +398,7 @@ export const MoodBoard = () => {
                                         <ArrowLeft className="h-4 w-4"/>
                                     </Button>
                                     <Button
-                                        className="rounded-full h-10 w-10 shadow-sm"
+                                        className="rounded-full h-10 w-10 shadow-sm rainbow-button"
                                         variant="outline"
                                         size="icon"
                                         onClick={handleResetPan}
@@ -412,7 +407,7 @@ export const MoodBoard = () => {
                                         <MoveHorizontal className="h-4 w-4"/>
                                     </Button>
                                     <Button
-                                        className="rounded-full h-10 w-10 shadow-sm"
+                                        className="rounded-full h-10 w-10 shadow-sm rainbow-button"
                                         variant="outline"
                                         size="icon"
                                         onClick={handleKeyboardPan('right')}
@@ -422,7 +417,7 @@ export const MoodBoard = () => {
                                     </Button>
                                     <div></div>
                                     <Button
-                                        className="rounded-full h-10 w-10 shadow-sm"
+                                        className="rounded-full h-10 w-10 shadow-sm rainbow-button"
                                         variant="outline"
                                         size="icon"
                                         onClick={handleKeyboardPan('down')}
@@ -436,13 +431,12 @@ export const MoodBoard = () => {
                                     X: {Math.round(panPosition.x)}, Y: {Math.round(panPosition.y)}
                                 </div>
                             </div>
-
                             {/* Clear All Button */}
                             <div className="pt-2">
                                 <Popover>
                                     <PopoverTrigger asChild>
                                         <Button
-                                            className="w-full"
+                                            className="w-full rainbow-button"
                                             variant="outline"
                                             title="Clear All Images"
                                         >
@@ -459,12 +453,14 @@ export const MoodBoard = () => {
                                             <div className="flex justify-end space-x-2">
                                                 <Button
                                                     variant="outline"
+                                                    className="rainbow-button"
                                                     onClick={() => setIsClearConfirmOpen(false)}
                                                 >
                                                     Cancel
                                                 </Button>
                                                 <Button
                                                     variant="destructive"
+                                                    className="rainbow-button"
                                                     onClick={handleClearAllImages}
                                                 >
                                                     Clear All

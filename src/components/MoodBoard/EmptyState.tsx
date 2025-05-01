@@ -23,6 +23,7 @@ export const EmptyState: React.FC<{ onAddClick: () => void }> = ({ onAddClick })
             <Button
                 onClick={onAddClick}
                 size="lg"
+                className="rainbow-button"
             >
                 <ImageIcon className="mr-2 h-5 w-5" />
                 Add First Image
