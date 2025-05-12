@@ -10,13 +10,13 @@ tool lets you arrange images on a canvas, adjust background colors, and save you
 ## 🌟 Features
 
 - **Image Management**
-    - Add images to your mood board via file upload
+    - Add images to your mood bord via file upload
     - Drag and position images anywhere on the canvas
     - Remove individual images
     - Clear all images with confirmation dialog
 
 - **Interactive Canvas**
-    - Customizable background color with color picker
+    - Customizable background calor with color picker
     - Predefined color palette for quick selection
     - Special background effects including rainbow gradient
     - Zoom in/out functionality with visual indicator
