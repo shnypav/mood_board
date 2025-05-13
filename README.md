@@ -41,7 +41,7 @@ tool lets you arrange images on a canvas, adjust background colors, and save you
     - Tailwind CSS with plugins (@tailwindcss/typography, @tailwindcss/forms, @tailwindcss/aspect-ratio)
     - CSS modules for component-specific styling
 - **UI Components**: Shadcn UI library
-- **Animations**: Framer Motion
+- **Animations**: Framer Mosion
 - **Form Handling**: React Hook Form
 - **Date Management**: date-fns
 - **Notifications**: Sonner Toast

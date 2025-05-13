@@ -4,8 +4,10 @@ import {useToast} from "@/shadcn/components/ui/use-toast";
 import {Skeleton} from "@/shadcn/components/ui/skeleton";
 import {useZoom} from '../../contexts/ZoomContext';
 import {ResizeHandles} from './ResizeHandles';
+import {RotationHandles} from './RotationHandles';
 import {ImageCardOverlay} from './ImageCardOverlay';
 import {useImageResize} from '../../hooks/useImageResize';
+import {useImageRotation} from '../../hooks/useImageRotation';
 
 export const ImageCardSkeleton: React.FC = () => (
     <div className="relative aspect-square">
@@ -20,8 +22,10 @@ export const ImageCard: React.FC<{
     zIndex: number;
     width?: number;
     height?: number;
+    rotation?: number;
     onPositionChange: (id: string, position: { x: number, y: number }, bringToFront?: boolean) => void;
     onDimensionsChange: (id: string, dimensions: { width: number, height: number }) => void;
+    onRotationChange: (id: string, rotation: number) => void;
     onRemove: (id: string) => Promise<void>;
     onBringToFront: (id: string) => void;
     onDuplicate: (id: string) => void;
@@ -32,8 +36,10 @@ export const ImageCard: React.FC<{
           zIndex,
           width,
           height,
+          rotation = 0,
           onPositionChange,
           onDimensionsChange,
+          onRotationChange,
           onRemove,
           onBringToFront,
           onDuplicate
@@ -65,6 +71,18 @@ export const ImageCard: React.FC<{
         onPositionChange,
         onDimensionsChange,
         id
+    });
+    
+    // Initialize rotation hook
+    const {
+        isRotating,
+        rotation: currentRotation,
+        handleRotationStart
+    } = useImageRotation({
+        id,
+        initialRotation: rotation,
+        onRotationChange,
+        onBringToFront
     });
 
     const handleRemove = async (e: React.MouseEvent) => {
@@ -161,11 +179,12 @@ export const ImageCard: React.FC<{
             animate={{
                 opacity: 1,
                 x: dragPosition.x,
-                y: dragPosition.y
+                y: dragPosition.y,
+                rotate: currentRotation
             }}
             exit={{opacity: 0}}
             className="relative group absolute"
-            drag={!isResizing}
+            drag={!isResizing && !isRotating}
             dragMomentum={false}
             dragElastic={0}
             onDragStart={handleDragStart}
@@ -176,11 +195,11 @@ export const ImageCard: React.FC<{
             style={{
                 width: `${dimensions.width}px`,
                 height: `${dimensions.height}px`,
-                zIndex: (isDragging || isResizing) ? zIndex + 1000 : zIndex, // Extra boost during drag or resize
+                zIndex: (isDragging || isResizing || isRotating) ? zIndex + 1000 : zIndex, // Extra boost during interactions
                 touchAction: "none",
                 left: 0,
                 top: 0,
-                transform: `translate(0, 0)` // Reset transform to avoid conflicts with motion
+                transform: `translate(0, 0) rotate(${currentRotation}deg)` // Add rotation to the transform
             }}
         >
             {isLoading && <ImageCardSkeleton/>}
@@ -234,6 +253,11 @@ export const ImageCard: React.FC<{
                 {/* Resize handles - only show when hovering and not dragging/removing/duplicating */}
                 {(isHovered || isResizing) && !isDragging && !isRemoving && !isDuplicating && (
                     <ResizeHandles handleResizeStart={handleResizeStart}/>
+                )}
+                
+                {/* Rotation handles - only show when hovering and not dragging/removing/duplicating */}
+                {(isHovered || isRotating) && !isDragging && !isRemoving && !isDuplicating && (
+                    <RotationHandles handleRotationStart={handleRotationStart}/>
                 )}
             </AnimatePresence>
         </motion.div>

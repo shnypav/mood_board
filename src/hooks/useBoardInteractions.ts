@@ -1,4 +1,5 @@
 import {useState, useEffect, useRef} from 'react';
+import './boardInteractionUtils'; // Import our window extension
 
 interface UseBoardInteractionsProps {
     panPosition: { x: number, y: number };

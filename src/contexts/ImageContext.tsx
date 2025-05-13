@@ -1,5 +1,4 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-
 interface Image {
     id: string;
     imageUrl: string;
@@ -7,14 +6,15 @@ interface Image {
     zIndex: number;
     width?: number;
     height?: number;
+    rotation?: number;
 }
-
 interface ImageContextType {
     images: Image[];
     addImage: (imageUrl: string) => void;
     removeImage: (id: string) => Promise<void>;
     updateImagePosition: (id: string, position: { x: number, y: number }, bringToFrontFlag?: boolean) => void;
     updateImageDimensions: (id: string, dimensions: { width: number, height: number }) => void;
+    updateImageRotation: (id: string, rotation: number) => void;
     bringToFront: (id: string) => void;
     clearAllImages: () => void;
     duplicateImage: (id: string) => void;
@@ -101,16 +101,12 @@ export const ImageProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                 image.id === id ? { ...image, zIndex: newZIndex } : image
             )
         );
-    };
-
-    const duplicateImage = (id: string) => {
+    };    const duplicateImage = (id: string) => {
         const originalImage = images.find(image => image.id === id);
         
         if (!originalImage) return;
-
         const newZIndex = maxZIndex + 1;
         setMaxZIndex(newZIndex);
-
         // Define offset for the duplicated image
         const offset = { x: 20, y: 20 };
         const newPosition = originalImage.position 
@@ -119,27 +115,32 @@ export const ImageProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                 y: originalImage.position.y + offset.y 
               } 
             : { x: offset.x, y: offset.y };
-
         const newImage: Image = {
             id: Date.now().toString(),
             imageUrl: originalImage.imageUrl,
             position: newPosition,
             zIndex: newZIndex,
             width: originalImage.width,
-            height: originalImage.height
+            height: originalImage.height,
+            rotation: originalImage.rotation
         };
-
         setImages(prev => [...prev, newImage]);
-    };
-    
-    const updateImageDimensions = (id: string, dimensions: { width: number, height: number }) => {
+    };    const updateImageDimensions = (id: string, dimensions: { width: number, height: number }) => {
         setImages(prev =>
             prev.map(image =>
                 image.id === id ? { ...image, width: dimensions.width, height: dimensions.height } : image
             )
         );
     };
-
+    
+    const updateImageRotation = (id: string, rotation: number) => {
+        setImages(prev =>
+            prev.map(image =>
+                image.id === id ? { ...image, rotation } : image
+            )
+        );
+    };
+    
     const clearAllImages = () => {
         setImages([]);
         setMaxZIndex(1);
@@ -154,6 +155,7 @@ export const ImageProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             removeImage,
             updateImagePosition,
             updateImageDimensions,
+            updateImageRotation,
             bringToFront,
             clearAllImages,
             duplicateImage,

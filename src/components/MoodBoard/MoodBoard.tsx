@@ -21,6 +21,7 @@ export const MoodBoard = () => {
         removeImage,
         updateImagePosition,
         updateImageDimensions,
+        updateImageRotation,
         bringToFront,
         duplicateImage,
         clearAllImages
@@ -121,11 +122,9 @@ export const MoodBoard = () => {
         return () => {
             window.removeEventListener('keydown', handleKeyDown);
         };
-    }, [panPosition]);
-
-    // Handle wheel events for zooming
+    }, [panPosition]);    // Handle wheel events for zooming
     useEffect(() => {
-        const handleWheel = (e) => {
+        const handleWheel = (e: WheelEvent) => {
             if (e.ctrlKey || e.metaKey) {
                 e.preventDefault();
                 if (e.deltaY < 0) {
@@ -135,12 +134,10 @@ export const MoodBoard = () => {
                 }
             }
         };
-
-        const boardElement = boardRef.current;
+        const boardElement = boardRef.current as HTMLDivElement | null;
         if (boardElement) {
             boardElement.addEventListener('wheel', handleWheel, {passive: false});
         }
-
         return () => {
             if (boardElement) {
                 boardElement.removeEventListener('wheel', handleWheel);
@@ -176,6 +173,7 @@ export const MoodBoard = () => {
                         isPanning={isPanning}
                         handlePositionChange={handlePositionChange}
                         updateImageDimensions={updateImageDimensions}
+                        updateImageRotation={updateImageRotation}
                         removeImage={removeImage}
                         bringToFront={bringToFront}
                         duplicateImage={duplicateImage}
