@@ -1,4 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { useBoards } from './BoardContext';
+
 interface Image {
     id: string;
     imageUrl: string;
@@ -21,47 +23,64 @@ interface ImageContextType {
     isLoading: boolean;
 }
 
-const LOCAL_STORAGE_KEY = 'moodboard_images';
-const LOCAL_STORAGE_MAX_Z_INDEX_KEY = 'moodboard_max_z_index';
-
 const ImageContext = createContext<ImageContextType | undefined>(undefined);
 
 export const ImageProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [images, setImages] = useState<Image[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [maxZIndex, setMaxZIndex] = useState(1);
+    const { currentBoardId, isLoading: boardsLoading } = useBoards();
 
-    // Load images from localStorage on initial render
+    // Get board-specific storage keys
+    const getStorageKeys = (boardId: string) => ({
+        imagesKey: `moodboard_images_${boardId}`,
+        maxZIndexKey: `moodboard_max_z_index_${boardId}`
+    });
+
+    // Load images from localStorage when current board changes
     useEffect(() => {
+        if (boardsLoading || !currentBoardId) {
+            return;
+        }
+
         const loadImages = async () => {
+            setIsLoading(true);
             try {
-                const savedImages = localStorage.getItem(LOCAL_STORAGE_KEY);
-                const savedMaxZIndex = localStorage.getItem(LOCAL_STORAGE_MAX_Z_INDEX_KEY);
+                const { imagesKey, maxZIndexKey } = getStorageKeys(currentBoardId);
+                const savedImages = localStorage.getItem(imagesKey);
+                const savedMaxZIndex = localStorage.getItem(maxZIndexKey);
 
                 if (savedImages) {
                     setImages(JSON.parse(savedImages));
+                } else {
+                    setImages([]);
                 }
 
                 if (savedMaxZIndex) {
                     setMaxZIndex(JSON.parse(savedMaxZIndex));
+                } else {
+                    setMaxZIndex(1);
                 }
             } catch (error) {
                 console.error('Failed to load images from localStorage:', error);
+                setImages([]);
+                setMaxZIndex(1);
             } finally {
                 setIsLoading(false);
             }
         };
 
         loadImages();
-    }, []);
+    }, [currentBoardId, boardsLoading]);
 
     // Save images to localStorage whenever they change
     useEffect(() => {
-        if (!isLoading) {
-            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(images));
-            localStorage.setItem(LOCAL_STORAGE_MAX_Z_INDEX_KEY, JSON.stringify(maxZIndex));
+        if (!isLoading && !boardsLoading && currentBoardId) {
+            const { imagesKey, maxZIndexKey } = getStorageKeys(currentBoardId);
+            localStorage.setItem(imagesKey, JSON.stringify(images));
+            localStorage.setItem(maxZIndexKey, JSON.stringify(maxZIndex));
         }
-    }, [images, maxZIndex, isLoading]);
+    }, [images, maxZIndex, isLoading, currentBoardId, boardsLoading]);
 
     const addImage = (imageUrl: string) => {
         const newZIndex = maxZIndex + 1;
@@ -101,7 +120,9 @@ export const ImageProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                 image.id === id ? { ...image, zIndex: newZIndex } : image
             )
         );
-    };    const duplicateImage = (id: string) => {
+    };
+
+    const duplicateImage = (id: string) => {
         const originalImage = images.find(image => image.id === id);
         
         if (!originalImage) return;
@@ -125,7 +146,9 @@ export const ImageProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             rotation: originalImage.rotation
         };
         setImages(prev => [...prev, newImage]);
-    };    const updateImageDimensions = (id: string, dimensions: { width: number, height: number }) => {
+    };
+
+    const updateImageDimensions = (id: string, dimensions: { width: number, height: number }) => {
         setImages(prev =>
             prev.map(image =>
                 image.id === id ? { ...image, width: dimensions.width, height: dimensions.height } : image
@@ -144,8 +167,11 @@ export const ImageProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const clearAllImages = () => {
         setImages([]);
         setMaxZIndex(1);
-        localStorage.removeItem(LOCAL_STORAGE_KEY);
-        localStorage.removeItem(LOCAL_STORAGE_MAX_Z_INDEX_KEY);
+        if (currentBoardId) {
+            const { imagesKey, maxZIndexKey } = getStorageKeys(currentBoardId);
+            localStorage.removeItem(imagesKey);
+            localStorage.removeItem(maxZIndexKey);
+        }
     };
 
     return (
@@ -159,7 +185,7 @@ export const ImageProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             bringToFront,
             clearAllImages,
             duplicateImage,
-            isLoading
+            isLoading: isLoading || boardsLoading
         }}>
             {children}
         </ImageContext.Provider>

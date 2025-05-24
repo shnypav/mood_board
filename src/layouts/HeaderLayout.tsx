@@ -1,9 +1,10 @@
 import React from 'react';
-import { useTheme } from '../contexts/ThemeContext';
+import { useBoards } from '../contexts/BoardContext';
 import '../styles/rainbow.css';
 
 export const HeaderLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const { backgroundColor } = useTheme();
+    const { currentBoard } = useBoards();
+    const backgroundColor = currentBoard?.backgroundColor || '#ffffff';
 
     // Use the rainbow-background class for animated gradient
     const className = `min-h-screen transition-colors duration-200 ${backgroundColor === 'rainbow' ? 'rainbow-background' : ''}`;

@@ -1,7 +1,7 @@
 import React, {useState, useRef, useEffect} from 'react';
 import {AnimatePresence} from 'framer-motion';
-import {useTheme} from '../../contexts/ThemeContext';
 import {useImages} from '../../contexts/ImageContext';
+import {useBoards} from '../../contexts/BoardContext';
 import {useZoom} from '../../contexts/ZoomContext';
 import {useToast} from "@/shadcn/components/ui/use-toast";
 import {AddImageModal} from '../AddImageModalComponent';
@@ -11,11 +11,12 @@ import {BoardControls} from './BoardControls';
 import {BoardIndicators} from './BoardIndicators';
 import {BoardContent} from './BoardContent';
 import {AddImageButton} from './AddImageButton';
+import {BoardManager} from './BoardManager';
 import {useBoardInteractions} from '../../hooks/useBoardInteractions';
 import '../../styles/rainbow.css';
 
 export const MoodBoard = () => {
-    const {backgroundColor, setBackgroundColor} = useTheme();
+    const { currentBoard, updateBoardBackground } = useBoards();
     const {
         images,
         removeImage,
@@ -34,6 +35,9 @@ export const MoodBoard = () => {
 
     const boardRef = useRef(null);
     const predefinedColors = ['#FFCDD2', '#C8E6C9', '#BBDEFB', '#FFF9C4', '#D1C4E9'];
+
+    // Get current background color from the current board
+    const backgroundColor = currentBoard?.backgroundColor || '#ffffff';
 
     // Use the board interactions hook
     const {
@@ -61,11 +65,25 @@ export const MoodBoard = () => {
     const handleCloseModal = () => setIsModalOpen(false);
 
     const handleColorChange = (color) => {
-        setBackgroundColor(color);
+        if (currentBoard) {
+            updateBoardBackground(currentBoard.id, color);
+            toast({
+                title: "Background updated",
+                description: `Background color changed for "${currentBoard.name}".`,
+                duration: 2000,
+            });
+        }
     };
 
     const handlePredefinedColorClick = (color) => {
-        setBackgroundColor(color);
+        if (currentBoard) {
+            updateBoardBackground(currentBoard.id, color);
+            toast({
+                title: "Background updated",
+                description: `Background color changed for "${currentBoard.name}".`,
+                duration: 2000,
+            });
+        }
     };
 
     const handlePositionChange = (id, newPosition, bringToFrontFlag = true) => {
@@ -78,6 +96,7 @@ export const MoodBoard = () => {
         toast({
             title: "All images cleared",
             description: "Your mood board has been reset.",
+            duration: 2000,
         });
     };
 
@@ -162,6 +181,9 @@ export const MoodBoard = () => {
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
         >
+            {/* Board Manager */}
+            <BoardManager />
+
             <AnimatePresence>
                 {images.length === 0 ? (
                     <EmptyState onAddClick={handleOpenModal}/>
@@ -209,7 +231,7 @@ export const MoodBoard = () => {
             {/* Indicators */}
             <BoardIndicators
                 showZoomIndicator={showZoomIndicator}
-                showPanIndicator={showPanIndicator}
+                showPanIndicator={false}
                 zoomLevel={zoomLevel}
                 panPosition={panPosition}
             />

@@ -1,4 +1,4 @@
-import { ThemeProvider } from './contexts/ThemeContext';
+import { BoardProvider } from './contexts/BoardContext';
 import { ImageProvider } from './contexts/ImageContext';
 import { ZoomProvider } from './contexts/ZoomContext';
 import { AppErrorBoundary } from './AppErrorBoundary';
@@ -8,7 +8,7 @@ import { MoodBoard } from './components/MoodBoardComponent';
 const App = () => {
     return (
         <AppErrorBoundary>
-            <ThemeProvider>
+            <BoardProvider>
                 <ImageProvider>
                     <ZoomProvider>
                         <HeaderLayout>
@@ -16,7 +16,7 @@ const App = () => {
                         </HeaderLayout>
                     </ZoomProvider>
                 </ImageProvider>
-            </ThemeProvider>
+            </BoardProvider>
         </AppErrorBoundary>
     );
 };
