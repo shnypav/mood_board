@@ -1,173 +1,85 @@
-import {useState, useEffect, useRef} from 'react';
-import './boardInteractionUtils'; // Import our window extension
+import { useCallback, useRef } from 'react';
+import { BoardPosition } from '../types/board';
 
 interface UseBoardInteractionsProps {
-    panPosition: { x: number, y: number };
-    setPanPosition: (position: { x: number, y: number }) => void;
-    zoomIn: () => void;
-    zoomOut: () => void;
+  boardPosition: BoardPosition;
+  setBoardPosition: (position: BoardPosition) => void;
+  zoom: number;
 }
 
 export const useBoardInteractions = ({
-                                         panPosition,
-                                         setPanPosition,
-                                         zoomIn,
-                                         zoomOut
-                                     }: UseBoardInteractionsProps) => {
-    const [isPanning, setIsPanning] = useState(false);
-    const [startPanPosition, setStartPanPosition] = useState({x: 0, y: 0});
-    const [showZoomIndicator, setShowZoomIndicator] = useState(false);
-    const [showPanIndicator, setShowPanIndicator] = useState(false);
+  boardPosition,
+  setBoardPosition,
+  zoom,
+}: UseBoardInteractionsProps) => {
+  const isDragging = useRef(false);
+  const lastPosition = useRef({ x: 0, y: 0 });
 
-    // Handle mouse events for panning
-    const handleMouseDown = (e: React.MouseEvent) => {
-        if (e.button === 0) { // Left mouse button
-            setIsPanning(true);
-            setStartPanPosition({
-                x: e.clientX - panPosition.x,
-                y: e.clientY - panPosition.y
-            });
-        }
-    };
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    // 🎯 Only start board panning if clicking on empty space (not on images or comments)
+    const target = e.target as HTMLElement;
+    
+    // 🚫 Don't pan if clicking on an image, image controls, or comment widget
+    if (target.closest('.image-card') || 
+        target.closest('[data-image-element]') ||
+        target.closest('.comment-widget') || // 💬 Added comment widget detection
+        target.closest('[data-comment-element]') || // 💬 Added comment element detection
+        target.closest('button') ||
+        target.closest('[role="button"]') ||
+        target.closest('textarea') ||
+        target.closest('input')) { // 🚀 Added input elements
+      return;
+    }
 
-    const handleMouseMove = (e: React.MouseEvent) => {
-        if (isPanning) {
-            const newX = e.clientX - startPanPosition.x;
-            const newY = e.clientY - startPanPosition.y;
-            setPanPosition({x: newX, y: newY});
-            setShowPanIndicator(true);
-            // Clear the timeout if it exists
-            if (window.panIndicatorTimeout) {
-                clearTimeout(window.panIndicatorTimeout);
-            }
-            // Set a new timeout
-            window.panIndicatorTimeout = setTimeout(() => {
-                setShowPanIndicator(false);
-            }, 1500);
-        }
-    };
+    // 🚀 CRITICAL: Check if event was already handled by child elements
+    if (e.defaultPrevented) {
+      return;
+    }
 
-    const handleMouseUp = () => {
-        setIsPanning(false);
-    };
+    // ✅ Start board panning for empty space clicks
+    isDragging.current = true;
+    lastPosition.current = { x: e.clientX, y: e.clientY };
+    e.preventDefault();
+  }, []);
 
-    // Handle touch events for panning
-    const handleTouchStart = (e: React.TouchEvent) => {
-        if (e.touches.length === 1) {
-            setIsPanning(true);
-            setStartPanPosition({
-                x: e.touches[0].clientX - panPosition.x,
-                y: e.touches[0].clientY - panPosition.y
-            });
-        }
-    };
+  const handleMouseMove = useCallback((e: React.MouseEvent) => {
+    // 🌍 Handle board panning when dragging empty space
+    if (!isDragging.current) return;
 
-    const handleTouchMove = (e: React.TouchEvent) => {
-        if (isPanning && e.touches.length === 1) {
-            const newX = e.touches[0].clientX - startPanPosition.x;
-            const newY = e.touches[0].clientY - startPanPosition.y;
-            setPanPosition({x: newX, y: newY});
-            setShowPanIndicator(true);
-            // Clear the timeout if it exists
-            if (window.panIndicatorTimeout) {
-                clearTimeout(window.panIndicatorTimeout);
-            }
-            // Set a new timeout
-            window.panIndicatorTimeout = setTimeout(() => {
-                setShowPanIndicator(false);
-            }, 1500);
-        }
-    };
+    // 🚀 CRITICAL: Check if event was already handled by child elements
+    if (e.defaultPrevented) {
+      return;
+    }
 
-    const handleTouchEnd = () => {
-        setIsPanning(false);
-    };
+    const deltaX = e.clientX - lastPosition.current.x;
+    const deltaY = e.clientY - lastPosition.current.y;
 
-    // Handle zoom changes
-    const handleZoomChange = (zoomFunc: () => void) => () => {
-        zoomFunc();
-        setShowZoomIndicator(true);
-        // Clear the timeout if it exists
-        if (window.zoomIndicatorTimeout) {
-            clearTimeout(window.zoomIndicatorTimeout);
-        }
-        // Set a new timeout
-        window.zoomIndicatorTimeout = setTimeout(() => {
-            setShowZoomIndicator(false);
-        }, 1500);
-    };
+    // 🔄 Update board position for infinite canvas effect
+    setBoardPosition({
+      x: boardPosition.x + deltaX / zoom,
+      y: boardPosition.y + deltaY / zoom
+    });
 
-    // Handle keyboard panning
-    const handleKeyboardPan = (direction: string) => () => {
-        const panStep = 50; // pixels to move per click
-        let newX = panPosition.x;
-        let newY = panPosition.y;
+    lastPosition.current = { x: e.clientX, y: e.clientY };
+    e.preventDefault();
+  }, [boardPosition, setBoardPosition, zoom]);
 
-        switch (direction) {
-            case 'up':
-                newY += panStep;
-                break;
-            case 'down':
-                newY -= panStep;
-                break;
-            case 'left':
-                newX += panStep;
-                break;
-            case 'right':
-                newX -= panStep;
-                break;
-        }
+  const handleMouseUp = useCallback(() => {
+    // 🛑 Stop board panning
+    isDragging.current = false;
+  }, []);
 
-        setPanPosition({x: newX, y: newY});
-        setShowPanIndicator(true);
-        // Clear the timeout if it exists
-        if (window.panIndicatorTimeout) {
-            clearTimeout(window.panIndicatorTimeout);
-        }
-        // Set a new timeout
-        window.panIndicatorTimeout = setTimeout(() => {
-            setShowPanIndicator(false);
-        }, 1500);
-    };
+  const handleWheel = useCallback((e: React.WheelEvent) => {
+    e.preventDefault();
+    // 🔍 Keep zoom functionality - zoom happens in place
+    // Note: Zoom logic is handled in ZoomContext, this just prevents default
+  }, []);
 
-    // Reset pan position
-    const handleResetPan = () => {
-        setPanPosition({x: 0, y: 0});
-        setShowPanIndicator(true);
-        // Clear the timeout if it exists
-        if (window.panIndicatorTimeout) {
-            clearTimeout(window.panIndicatorTimeout);
-        }
-        // Set a new timeout
-        window.panIndicatorTimeout = setTimeout(() => {
-            setShowPanIndicator(false);
-        }, 1500);
-    };
-
-    // Cleanup timeouts
-    useEffect(() => {
-        return () => {
-            if (window.zoomIndicatorTimeout) {
-                clearTimeout(window.zoomIndicatorTimeout);
-            }
-            if (window.panIndicatorTimeout) {
-                clearTimeout(window.panIndicatorTimeout);
-            }
-        };
-    }, []);
-
-    return {
-        isPanning,
-        showZoomIndicator,
-        showPanIndicator,
-        handleMouseDown,
-        handleMouseMove,
-        handleMouseUp,
-        handleTouchStart,
-        handleTouchMove,
-        handleTouchEnd,
-        handleZoomChange,
-        handleKeyboardPan,
-        handleResetPan
-    };
+  return {
+    handleMouseDown,
+    handleMouseMove,
+    handleMouseUp,
+    handleWheel,
+    isPanning: isDragging.current, // 📊 Export panning state
+  };
 };

@@ -98,6 +98,8 @@ export const ImageCard: React.FC<{
         try {
             setIsRemoving(true);
             await onRemove(id);
+            // 🧹 Clean up saved comment position when image is removed
+            localStorage.removeItem(`comment_position_${id}`);
         } catch (error) {
             toast({
                 variant: "destructive",
@@ -136,14 +138,43 @@ export const ImageCard: React.FC<{
     const handleComment = (e: React.MouseEvent) => {
         e.stopPropagation();
 
-        if (imageCardRef.current) {
-            const rect = imageCardRef.current.getBoundingClientRect();
-            setCommentPosition({
-                x: rect.right + 10, // Position to the right of the image
-                y: rect.top
-            });
+        // 🔄 Toggle comment dialog - close if already open
+        if (isCommentOpen) {
+            setIsCommentOpen(false);
+            return;
         }
 
+        // 💾 Try to load saved position first
+        const savedPosition = localStorage.getItem(`comment_position_${id}`);
+        let newPosition = { x: 0, y: 0 };
+
+        if (savedPosition) {
+            try {
+                newPosition = JSON.parse(savedPosition);
+                console.log(`📍 Loaded saved comment position for image ${id}:`, newPosition);
+            } catch (error) {
+                console.error('🚨 Failed to parse saved comment position:', error);
+                // Fall back to default positioning
+                if (imageCardRef.current) {
+                    const rect = imageCardRef.current.getBoundingClientRect();
+                    newPosition = {
+                        x: rect.right + 10, // Position to the right of the image
+                        y: rect.top
+                    };
+                }
+            }
+        } else {
+            // 🎯 Default positioning if no saved position
+            if (imageCardRef.current) {
+                const rect = imageCardRef.current.getBoundingClientRect();
+                newPosition = {
+                    x: rect.right + 10, // Position to the right of the image
+                    y: rect.top
+                };
+            }
+        }
+
+        setCommentPosition(newPosition);
         setIsCommentOpen(true);
         onBringToFront(id); // Bring image to front when commenting
     };
@@ -159,12 +190,20 @@ export const ImageCard: React.FC<{
 
         if (!newComment) {
             setIsCommentOpen(false);
+            // 🧹 Clean up saved position if comment is removed
+            localStorage.removeItem(`comment_position_${id}`);
         }
     };
 
     // 💬 Handle comment close
     const handleCommentClose = () => {
         setIsCommentOpen(false);
+    };
+
+    // 💾 Handle comment position change
+    const handleCommentPositionChange = (newPosition: { x: number; y: number }) => {
+        setCommentPosition(newPosition);
+        // Position is automatically saved in CommentInput component
     };
 
     const handleDragStart = () => {
@@ -228,8 +267,8 @@ export const ImageCard: React.FC<{
                     rotate: currentRotation
                 }}
                 exit={{opacity: 0}}
-                className="relative group absolute"
-                drag={!isResizing && !isRotating && !isCommentOpen} // 💬 Disable drag when comment is open
+                className="relative group absolute image-card" // 🎯 Added image-card class for detection
+                drag={!isResizing && !isRotating} // 🚀 FIXED: Allow drag even when comment is open!
                 dragMomentum={false}
                 dragElastic={0}
                 onDragStart={handleDragStart}
@@ -246,22 +285,8 @@ export const ImageCard: React.FC<{
                     top: 0,
                     transform: `translate(0, 0) rotate(${currentRotation}deg)` // Add rotation to the transform
                 }}
+                data-image-element="true" // 🎯 Mark as image element for board interaction detection
             >
-                {isLoading && <ImageCardSkeleton/>}
-                {/* Градиент по периметру */}
-                <div
-                    className="w-full h-full absolute inset-0 z-10 pointer-events-none"
-                    style={{
-                        borderRadius: '0.5rem',
-                        background: `
-                            linear-gradient(to top, rgba(0,0,0,0.18), transparent 40%),
-                            linear-gradient(to bottom, rgba(0,0,0,0.18), transparent 40%),
-                            linear-gradient(to left, rgba(0,0,0,0.18), transparent 40%),
-                            linear-gradient(to right, rgba(0,0,0,0.18), transparent 40%)
-                        `,
-                        backgroundBlendMode: 'multiply'
-                    }}
-                />
 
                 {/* 💬 Comment indicator - show small icon when image has comment */}
                 {comment && !isHovered && (
@@ -316,12 +341,12 @@ export const ImageCard: React.FC<{
                     )}
 
                     {/* Resize handles - only show when hovering and not dragging/removing/duplicating */}
-                    {(isHovered || isResizing) && !isDragging && !isRemoving && !isDuplicating && !isCommentOpen && (
+                    {(isHovered || isResizing) && !isDragging && !isRemoving && !isDuplicating && (
                         <ResizeHandles handleResizeStart={handleResizeStart}/>
                     )}
 
                     {/* Rotation handles - only show when hovering and not dragging/removing/duplicating */}
-                    {(isHovered || isRotating) && !isDragging && !isRemoving && !isDuplicating && !isCommentOpen && (
+                    {(isHovered || isRotating) && !isDragging && !isRemoving && !isDuplicating && (
                         <RotationHandles handleRotationStart={handleRotationStart}/>
                     )}
                 </AnimatePresence>
@@ -334,8 +359,10 @@ export const ImageCard: React.FC<{
                         isOpen={isCommentOpen}
                         onClose={handleCommentClose}
                         onSave={handleCommentSave}
+                        onPositionChange={handleCommentPositionChange} // 💾 Pass position change handler
                         initialComment={comment}
                         position={commentPosition}
+                        imageId={id} // 🆔 Pass image ID for position storage
                     />
                 )}
             </AnimatePresence>

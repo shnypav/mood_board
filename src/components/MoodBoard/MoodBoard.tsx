@@ -40,25 +40,17 @@ export const MoodBoard = () => {
     // Get current background color from the current board
     const backgroundColor = currentBoard?.backgroundColor || '#ffffff';
 
-    // Use the board interactions hook
+    // 🌍 Initialize board interactions with infinite canvas support
     const {
-        isPanning,
-        showZoomIndicator,
-        showPanIndicator,
         handleMouseDown,
         handleMouseMove,
         handleMouseUp,
-        handleTouchStart,
-        handleTouchMove,
-        handleTouchEnd,
-        handleZoomChange,
-        handleKeyboardPan,
-        handleResetPan
+        handleWheel,
+        isPanning
     } = useBoardInteractions({
-        panPosition,
-        setPanPosition,
-        zoomIn,
-        zoomOut
+        boardPosition: panPosition,
+        setBoardPosition: setPanPosition,
+        zoom: zoomLevel
     });
 
     // Handlers
@@ -101,142 +93,131 @@ export const MoodBoard = () => {
         });
     };
 
-    // Add keyboard event listeners
-    useEffect(() => {
-        const handleKeyDown = (e) => {
-            // Handle keyboard shortcuts
-            if (e.ctrlKey || e.metaKey) {
-                if (e.key === 'n') {
-                    e.preventDefault();
-                    handleOpenModal();
-                }
-            }
+    // 🎯 Reset pan position to center
+    const handleResetPan = () => {
+        setPanPosition({ x: 0, y: 0 });
+        toast({
+            title: "View reset 🎯",
+            description: "Board view has been centered.",
+            duration: 1500,
+        });
+    };
 
-            // Arrow keys for panning
-            if (!e.ctrlKey && !e.metaKey && !e.shiftKey) {
-                switch (e.key) {
-                    case 'ArrowUp':
-                        e.preventDefault();
-                        handleKeyboardPan('up')();
-                        break;
-                    case 'ArrowDown':
-                        e.preventDefault();
-                        handleKeyboardPan('down')();
-                        break;
-                    case 'ArrowLeft':
-                        e.preventDefault();
-                        handleKeyboardPan('left')();
-                        break;
-                    case 'ArrowRight':
-                        e.preventDefault();
-                        handleKeyboardPan('right')();
-                        break;
-                }
-            }
-        };
+    // ⌨️ Keyboard panning support
+    const handleKeyboardPan = (direction: string) => () => {
+        const panStep = 100 / zoomLevel; // Adjust step based on zoom
+        const newPosition = { ...panPosition };
 
-        // Add event listener
-        window.addEventListener('keydown', handleKeyDown);
-
-        // Cleanup
-        return () => {
-            window.removeEventListener('keydown', handleKeyDown);
-        };
-    }, [panPosition]);    // Handle wheel events for zooming
-    useEffect(() => {
-        const handleWheel = (e: WheelEvent) => {
-            if (e.ctrlKey || e.metaKey) {
-                e.preventDefault();
-                if (e.deltaY < 0) {
-                    handleZoomChange(zoomIn)();
-                } else {
-                    handleZoomChange(zoomOut)();
-                }
-            }
-        };
-        const boardElement = boardRef.current as HTMLDivElement | null;
-        if (boardElement) {
-            boardElement.addEventListener('wheel', handleWheel, {passive: false});
+        switch (direction) {
+            case 'up':
+                newPosition.y += panStep;
+                break;
+            case 'down':
+                newPosition.y -= panStep;
+                break;
+            case 'left':
+                newPosition.x += panStep;
+                break;
+            case 'right':
+                newPosition.x -= panStep;
+                break;
         }
-        return () => {
-            if (boardElement) {
-                boardElement.removeEventListener('wheel', handleWheel);
-            }
-        };
-    }, [zoomLevel]);
+
+        setPanPosition(newPosition);
+    };
 
     return (
-        <div
-            className={`relative min-h-[600px] p-4 overflow-hidden ${backgroundColor === 'rainbow' ? 'rainbow-background' : ''}`}
-            style={{
-                height: '100vh',
-                cursor: isPanning ? 'grabbing' : 'grab',
-                backgroundColor: backgroundColor === 'rainbow' ? 'transparent' : backgroundColor
-            }}
-            ref={boardRef}
-            onMouseDown={handleMouseDown}
-            onMouseMove={handleMouseMove}
-            onMouseUp={handleMouseUp}
-            onMouseLeave={handleMouseUp}
-            onTouchStart={handleTouchStart}
-            onTouchMove={handleTouchMove}
-            onTouchEnd={handleTouchEnd}
-        >
-            {/* Board Manager */}
-            <BoardManager />
+        <div className="mood-board-container">
+            <div className="mood-board-header">
+                <BoardManager />
+            </div>
+            <div
+                ref={boardRef}
+                className="mood-board-canvas"
+                style={{
+                    width: '100%',
+                    height: '100vh',
+                    overflow: 'hidden',
+                    position: 'relative',
+                    backgroundColor: backgroundColor,
+                    cursor: isPanning ? 'grabbing' : 'grab', // 🖱️ Visual feedback for panning
+                }}
+                // 🌍 Enable board interactions for infinite canvas
+                onMouseDown={handleMouseDown}
+                onMouseMove={handleMouseMove}
+                onMouseUp={handleMouseUp}
+                onWheel={handleWheel}
+            >
+                <div
+                    className="board-content"
+                    style={{
+                        // 🌍 Both zoom AND pan for infinite canvas effect
+                        transform: `translate(${panPosition.x}px, ${panPosition.y}px) scale(${zoomLevel})`,
+                        transformOrigin: 'center center',
+                        width: '100%',
+                        height: '100%',
+                        position: 'relative',
+                        transition: isPanning ? 'none' : 'transform 0.2s ease-out', // 🎭 Smooth transitions when not panning
+                    }}
+                >
+                    {/* 🖼️ Show empty state when no images */}
+                    {images.length === 0 ? (
+                        <EmptyState onAddImage={handleOpenModal} />
+                    ) : (
+                        <BoardContent
+                            images={images}
+                            zoomLevel={zoomLevel}
+                            panPosition={panPosition} // 🌍 Pass real pan position
+                            isPanning={isPanning} // 📊 Pass panning state
+                            handlePositionChange={handlePositionChange}
+                            updateImageDimensions={updateImageDimensions}
+                            updateImageRotation={updateImageRotation}
+                            updateImageComment={updateImageComment} // 💬 Comment support
+                            removeImage={removeImage}
+                            bringToFront={bringToFront}
+                            duplicateImage={duplicateImage}
+                        />
+                    )}
+                </div>
+            </div>
 
+            {/* 🎨 Color picker for background */}
+            <div className="absolute bottom-8 left-8">
+                <ColorPicker
+                    currentColor={backgroundColor}
+                    onColorChange={handleColorChange}
+                    predefinedColors={predefinedColors}
+                    onPredefinedColorClick={handlePredefinedColorClick}
+                />
+            </div>
+
+            {/* ➕ Add image button */}
+            <AddImageButton onClick={handleOpenModal} />
+
+            {/* 🎛️ Board controls with full functionality restored */}
+            <div className="absolute bottom-8 right-8">
+                <BoardControls
+                    zoomLevel={zoomLevel}
+                    panPosition={panPosition} // 🌍 Real pan position
+                    handleZoomChange={(zoomFunc) => () => zoomFunc()}
+                    zoomIn={zoomIn}
+                    zoomOut={zoomOut}
+                    handleKeyboardPan={handleKeyboardPan} // ⌨️ Keyboard panning
+                    handleResetPan={handleResetPan} // 🎯 Reset functionality
+                    handleClearAllImages={handleClearAllImages}
+                    setIsClearConfirmOpen={setIsClearConfirmOpen}
+                />
+            </div>
+
+            {/* 📱 Add image modal */}
             <AnimatePresence>
-                {images.length === 0 ? (
-                    <EmptyState onAddClick={handleOpenModal}/>
-                ) : (
-                    <BoardContent
-                        images={images}
-                        zoomLevel={zoomLevel}
-                        panPosition={panPosition}
-                        isPanning={isPanning}
-                        handlePositionChange={handlePositionChange}
-                        updateImageDimensions={updateImageDimensions}
-                        updateImageRotation={updateImageRotation}
-                        updateImageComment={updateImageComment} // 💬 Pass comment update function
-                        removeImage={removeImage}
-                        bringToFront={bringToFront}
-                        duplicateImage={duplicateImage}
+                {isModalOpen && (
+                    <AddImageModal
+                        isOpen={isModalOpen}
+                        onClose={handleCloseModal}
                     />
                 )}
             </AnimatePresence>
-
-            {/* Add Image Button */}
-            <AddImageButton handleOpenModal={handleOpenModal}/>
-
-            {/* Board Controls */}
-            <BoardControls
-                zoomLevel={zoomLevel}
-                panPosition={panPosition}
-                handleZoomChange={handleZoomChange}
-                zoomIn={zoomIn}
-                zoomOut={zoomOut}
-                handleKeyboardPan={handleKeyboardPan}
-                handleResetPan={handleResetPan}
-                handleClearAllImages={handleClearAllImages}
-                setIsClearConfirmOpen={setIsClearConfirmOpen}
-            />
-
-            {/* Modals and Pickers */}
-            <AddImageModal isOpen={isModalOpen} onClose={handleCloseModal}/>
-            <ColorPicker
-                backgroundColor={backgroundColor}
-                onColorChange={handleColorChange}
-                predefinedColors={predefinedColors}
-                onPredefinedColorClick={handlePredefinedColorClick}
-            />
-
-            {/* Indicators */}
-            <BoardIndicators
-                showZoomIndicator={showZoomIndicator}
-                showPanIndicator={false}
-                zoomLevel={zoomLevel}
-                panPosition={panPosition}
-            />
         </div>
     );
 };
