@@ -6,6 +6,7 @@ import {useZoom} from '../../contexts/ZoomContext';
 import {ResizeHandles} from './ResizeHandles';
 import {RotationHandles} from './RotationHandles';
 import {ImageCardOverlay} from './ImageCardOverlay';
+import {CommentInput} from './CommentInput'; // 💬 Import comment component
 import {useImageResize} from '../../hooks/useImageResize';
 import {useImageRotation} from '../../hooks/useImageRotation';
 
@@ -23,9 +24,11 @@ export const ImageCard: React.FC<{
     width?: number;
     height?: number;
     rotation?: number;
+    comment?: string; // 💬 Added comment prop
     onPositionChange: (id: string, position: { x: number, y: number }, bringToFront?: boolean) => void;
     onDimensionsChange: (id: string, dimensions: { width: number, height: number }) => void;
     onRotationChange: (id: string, rotation: number) => void;
+    onCommentChange: (id: string, comment: string) => void; // 💬 Added comment change handler
     onRemove: (id: string) => Promise<void>;
     onBringToFront: (id: string) => void;
     onDuplicate: (id: string) => void;
@@ -37,9 +40,11 @@ export const ImageCard: React.FC<{
           width,
           height,
           rotation = 0,
+          comment = '', // 💬 Added comment with default
           onPositionChange,
           onDimensionsChange,
           onRotationChange,
+          onCommentChange, // 💬 Added comment change handler
           onRemove,
           onBringToFront,
           onDuplicate
@@ -49,10 +54,13 @@ export const ImageCard: React.FC<{
     const [isDuplicating, setIsDuplicating] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const [isDragging, setIsDragging] = useState(false);
+    const [isCommentOpen, setIsCommentOpen] = useState(false); // 💬 Comment state
+    const [commentPosition, setCommentPosition] = useState({ x: 0, y: 0 }); // 💬 Comment position
     const {toast} = useToast();
     const {zoomLevel} = useZoom();
     const startPositionRef = useRef({x: 0, y: 0});
     const originalPositionRef = useRef({x: 0, y: 0});
+    const imageCardRef = useRef<HTMLDivElement>(null); // 💬 Ref for positioning
 
     // Initialize resize hook
     const {
@@ -108,7 +116,7 @@ export const ImageCard: React.FC<{
             // Show success toast
             toast({
                 title: "Success",
-                description: "Image duplicated successfully",
+                description: "Image duplicated successfully 🎉",
             });
         } catch (error) {
             toast({
@@ -122,6 +130,41 @@ export const ImageCard: React.FC<{
                 setIsDuplicating(false);
             }, 300);
         }
+    };
+
+    // 💬 Handle comment button click
+    const handleComment = (e: React.MouseEvent) => {
+        e.stopPropagation();
+
+        if (imageCardRef.current) {
+            const rect = imageCardRef.current.getBoundingClientRect();
+            setCommentPosition({
+                x: rect.right + 10, // Position to the right of the image
+                y: rect.top
+            });
+        }
+
+        setIsCommentOpen(true);
+        onBringToFront(id); // Bring image to front when commenting
+    };
+
+    // 💬 Handle comment save
+    const handleCommentSave = (newComment: string) => {
+        onCommentChange(id, newComment);
+        toast({
+            title: "Comment saved! 💬",
+            description: newComment ? "Your comment has been added to the image." : "Comment removed from image.",
+            duration: 2000,
+        });
+
+        if (!newComment) {
+            setIsCommentOpen(false);
+        }
+    };
+
+    // 💬 Handle comment close
+    const handleCommentClose = () => {
+        setIsCommentOpen(false);
     };
 
     const handleDragStart = () => {
@@ -174,92 +217,128 @@ export const ImageCard: React.FC<{
     }, [isLoading, width, height, imageUrl, id, onDimensionsChange]);
 
     return (
-        <motion.div
-            initial={{opacity: 0}}
-            animate={{
-                opacity: 1,
-                x: dragPosition.x,
-                y: dragPosition.y,
-                rotate: currentRotation
-            }}
-            exit={{opacity: 0}}
-            className="relative group absolute"
-            drag={!isResizing && !isRotating}
-            dragMomentum={false}
-            dragElastic={0}
-            onDragStart={handleDragStart}
-            onDragEnd={handleDragEnd}
-            onClick={handleClick}
-            onMouseEnter={() => setIsHovered(true)}
-            onMouseLeave={() => setIsHovered(false)}
-            style={{
-                width: `${dimensions.width}px`,
-                height: `${dimensions.height}px`,
-                zIndex: (isDragging || isResizing || isRotating) ? zIndex + 1000 : zIndex, // Extra boost during interactions
-                touchAction: "none",
-                left: 0,
-                top: 0,
-                transform: `translate(0, 0) rotate(${currentRotation}deg)` // Add rotation to the transform
-            }}
-        >
-            {isLoading && <ImageCardSkeleton/>}
-            {/* Градиент по периметру */}
-            <div
-                className="w-full h-full absolute inset-0 z-10 pointer-events-none"
-                style={{
-                    borderRadius: '0.5rem',
-                    background: `
-                        linear-gradient(to top, rgba(0,0,0,0.18), transparent 40%),
-                        linear-gradient(to bottom, rgba(0,0,0,0.18), transparent 40%),
-                        linear-gradient(to left, rgba(0,0,0,0.18), transparent 40%),
-                        linear-gradient(to right, rgba(0,0,0,0.18), transparent 40%)
-                    `,
-                    backgroundBlendMode: 'multiply'
+        <>
+            <motion.div
+                ref={imageCardRef} // 💬 Added ref for positioning
+                initial={{opacity: 0}}
+                animate={{
+                    opacity: 1,
+                    x: dragPosition.x,
+                    y: dragPosition.y,
+                    rotate: currentRotation
                 }}
-            />
-            <img
-                src={imageUrl}
-                alt="Mood board image"
-                className={`w-full h-full object-cover rounded-lg transition-opacity duration-200 ${isLoading ? 'opacity-0' : 'opacity-100'} cursor-move`}
-                onLoad={() => setIsLoading(false)}
-                onError={() => setIsLoading(false)}
-            />
-            <AnimatePresence>
-                {isHovered && !isRemoving && !isDuplicating && !isDragging && !isResizing && (
-                    <ImageCardOverlay
-                        isRemoving={isRemoving}
-                        isDuplicating={isDuplicating}
-                        handleRemove={handleRemove}
-                        handleDuplicate={handleDuplicate}
-                    />
-                )}
-                {isRemoving && (
-                    <ImageCardOverlay
-                        isRemoving={isRemoving}
-                        isDuplicating={isDuplicating}
-                        handleRemove={handleRemove}
-                        handleDuplicate={handleDuplicate}
-                    />
-                )}
-                {isDuplicating && (
-                    <ImageCardOverlay
-                        isRemoving={isRemoving}
-                        isDuplicating={isDuplicating}
-                        handleRemove={handleRemove}
-                        handleDuplicate={handleDuplicate}
-                    />
+                exit={{opacity: 0}}
+                className="relative group absolute"
+                drag={!isResizing && !isRotating && !isCommentOpen} // 💬 Disable drag when comment is open
+                dragMomentum={false}
+                dragElastic={0}
+                onDragStart={handleDragStart}
+                onDragEnd={handleDragEnd}
+                onClick={handleClick}
+                onMouseEnter={() => setIsHovered(true)}
+                onMouseLeave={() => setIsHovered(false)}
+                style={{
+                    width: `${dimensions.width}px`,
+                    height: `${dimensions.height}px`,
+                    zIndex: (isDragging || isResizing || isRotating || isCommentOpen) ? zIndex + 1000 : zIndex, // 💬 Extra boost when comment is open
+                    touchAction: "none",
+                    left: 0,
+                    top: 0,
+                    transform: `translate(0, 0) rotate(${currentRotation}deg)` // Add rotation to the transform
+                }}
+            >
+                {isLoading && <ImageCardSkeleton/>}
+                {/* Градиент по периметру */}
+                <div
+                    className="w-full h-full absolute inset-0 z-10 pointer-events-none"
+                    style={{
+                        borderRadius: '0.5rem',
+                        background: `
+                            linear-gradient(to top, rgba(0,0,0,0.18), transparent 40%),
+                            linear-gradient(to bottom, rgba(0,0,0,0.18), transparent 40%),
+                            linear-gradient(to left, rgba(0,0,0,0.18), transparent 40%),
+                            linear-gradient(to right, rgba(0,0,0,0.18), transparent 40%)
+                        `,
+                        backgroundBlendMode: 'multiply'
+                    }}
+                />
+
+                {/* 💬 Comment indicator - show small icon when image has comment */}
+                {comment && !isHovered && (
+                    <div className="absolute top-2 right-2 z-20 bg-green-500 text-white rounded-full p-1 shadow-lg">
+                        <motion.div
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            className="w-3 h-3 flex items-center justify-center"
+                        >
+                            💬
+                        </motion.div>
+                    </div>
                 )}
 
-                {/* Resize handles - only show when hovering and not dragging/removing/duplicating */}
-                {(isHovered || isResizing) && !isDragging && !isRemoving && !isDuplicating && (
-                    <ResizeHandles handleResizeStart={handleResizeStart}/>
-                )}
-                
-                {/* Rotation handles - only show when hovering and not dragging/removing/duplicating */}
-                {(isHovered || isRotating) && !isDragging && !isRemoving && !isDuplicating && (
-                    <RotationHandles handleRotationStart={handleRotationStart}/>
+                <img
+                    src={imageUrl}
+                    alt="Mood board image"
+                    className={`w-full h-full object-cover rounded-lg transition-opacity duration-200 ${isLoading ? 'opacity-0' : 'opacity-100'} cursor-move`}
+                    onLoad={() => setIsLoading(false)}
+                    onError={() => setIsLoading(false)}
+                />
+                <AnimatePresence>
+                    {isHovered && !isRemoving && !isDuplicating && !isDragging && !isResizing && (
+                        <ImageCardOverlay
+                            isRemoving={isRemoving}
+                            isDuplicating={isDuplicating}
+                            hasComment={!!comment} // 💬 Pass comment status
+                            handleRemove={handleRemove}
+                            handleDuplicate={handleDuplicate}
+                            handleComment={handleComment} // 💬 Pass comment handler
+                        />
+                    )}
+                    {isRemoving && (
+                        <ImageCardOverlay
+                            isRemoving={isRemoving}
+                            isDuplicating={isDuplicating}
+                            hasComment={!!comment}
+                            handleRemove={handleRemove}
+                            handleDuplicate={handleDuplicate}
+                            handleComment={handleComment}
+                        />
+                    )}
+                    {isDuplicating && (
+                        <ImageCardOverlay
+                            isRemoving={isRemoving}
+                            isDuplicating={isDuplicating}
+                            hasComment={!!comment}
+                            handleRemove={handleRemove}
+                            handleDuplicate={handleDuplicate}
+                            handleComment={handleComment}
+                        />
+                    )}
+
+                    {/* Resize handles - only show when hovering and not dragging/removing/duplicating */}
+                    {(isHovered || isResizing) && !isDragging && !isRemoving && !isDuplicating && !isCommentOpen && (
+                        <ResizeHandles handleResizeStart={handleResizeStart}/>
+                    )}
+
+                    {/* Rotation handles - only show when hovering and not dragging/removing/duplicating */}
+                    {(isHovered || isRotating) && !isDragging && !isRemoving && !isDuplicating && !isCommentOpen && (
+                        <RotationHandles handleRotationStart={handleRotationStart}/>
+                    )}
+                </AnimatePresence>
+            </motion.div>
+
+            {/* 💬 Comment Input Component */}
+            <AnimatePresence>
+                {isCommentOpen && (
+                    <CommentInput
+                        isOpen={isCommentOpen}
+                        onClose={handleCommentClose}
+                        onSave={handleCommentSave}
+                        initialComment={comment}
+                        position={commentPosition}
+                    />
                 )}
             </AnimatePresence>
-        </motion.div>
+        </>
     );
 };

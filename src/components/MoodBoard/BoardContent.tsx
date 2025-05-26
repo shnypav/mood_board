@@ -11,6 +11,7 @@ interface BoardContentProps {
         width?: number;
         height?: number;
         rotation?: number;
+        comment?: string; // 💬 Added comment field
     }>;
     zoomLevel: number;
     panPosition: { x: number, y: number };
@@ -18,6 +19,7 @@ interface BoardContentProps {
     handlePositionChange: (id: string, position: { x: number, y: number }, bringToFront?: boolean) => void;
     updateImageDimensions: (id: string, dimensions: { width: number, height: number }) => void;
     updateImageRotation: (id: string, rotation: number) => void;
+    updateImageComment: (id: string, comment: string) => void; // 💬 Added comment update function
     removeImage: (id: string) => Promise<void>;
     bringToFront: (id: string) => void;
     duplicateImage: (id: string) => void;
@@ -31,6 +33,7 @@ export const BoardContent: React.FC<BoardContentProps> = ({
                                                               handlePositionChange,
                                                               updateImageDimensions,
                                                               updateImageRotation,
+                                                              updateImageComment, // 💬 Added comment update
                                                               removeImage,
                                                               bringToFront,
                                                               duplicateImage
@@ -59,9 +62,11 @@ export const BoardContent: React.FC<BoardContentProps> = ({
                         width={image.width}
                         height={image.height}
                         rotation={image.rotation}
+                        comment={image.comment} // 💬 Pass comment
                         onPositionChange={handlePositionChange}
                         onDimensionsChange={updateImageDimensions}
                         onRotationChange={updateImageRotation}
+                        onCommentChange={updateImageComment} // 💬 Pass comment handler
                         onRemove={removeImage}
                         onBringToFront={bringToFront}
                         onDuplicate={duplicateImage}

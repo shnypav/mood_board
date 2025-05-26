@@ -9,6 +9,7 @@ interface Image {
     width?: number;
     height?: number;
     rotation?: number;
+    comment?: string; // 💬 Added comment field
 }
 interface ImageContextType {
     images: Image[];
@@ -17,6 +18,7 @@ interface ImageContextType {
     updateImagePosition: (id: string, position: { x: number, y: number }, bringToFrontFlag?: boolean) => void;
     updateImageDimensions: (id: string, dimensions: { width: number, height: number }) => void;
     updateImageRotation: (id: string, rotation: number) => void;
+    updateImageComment: (id: string, comment: string) => void; // 💬 Added comment update function
     bringToFront: (id: string) => void;
     clearAllImages: () => void;
     duplicateImage: (id: string) => void;
@@ -143,7 +145,8 @@ export const ImageProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             zIndex: newZIndex,
             width: originalImage.width,
             height: originalImage.height,
-            rotation: originalImage.rotation
+            rotation: originalImage.rotation,
+            comment: originalImage.comment // 💬 Copy comment when duplicating
         };
         setImages(prev => [...prev, newImage]);
     };
@@ -160,6 +163,15 @@ export const ImageProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         setImages(prev =>
             prev.map(image =>
                 image.id === id ? { ...image, rotation } : image
+            )
+        );
+    };
+
+    // 💬 New function to update image comments
+    const updateImageComment = (id: string, comment: string) => {
+        setImages(prev =>
+            prev.map(image =>
+                image.id === id ? { ...image, comment } : image
             )
         );
     };
@@ -182,6 +194,7 @@ export const ImageProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             updateImagePosition,
             updateImageDimensions,
             updateImageRotation,
+            updateImageComment, // 💬 Added to context
             bringToFront,
             clearAllImages,
             duplicateImage,

@@ -23,6 +23,7 @@ export const MoodBoard = () => {
         updateImagePosition,
         updateImageDimensions,
         updateImageRotation,
+        updateImageComment, // 💬 Added comment update function
         bringToFront,
         duplicateImage,
         clearAllImages
@@ -68,7 +69,7 @@ export const MoodBoard = () => {
         if (currentBoard) {
             updateBoardBackground(currentBoard.id, color);
             toast({
-                title: "Background updated",
+                title: "Background updated 🎨",
                 description: `Background color changed for "${currentBoard.name}".`,
                 duration: 2000,
             });
@@ -79,7 +80,7 @@ export const MoodBoard = () => {
         if (currentBoard) {
             updateBoardBackground(currentBoard.id, color);
             toast({
-                title: "Background updated",
+                title: "Background updated 🎨",
                 description: `Background color changed for "${currentBoard.name}".`,
                 duration: 2000,
             });
@@ -94,7 +95,7 @@ export const MoodBoard = () => {
         clearAllImages();
         setIsClearConfirmOpen(false);
         toast({
-            title: "All images cleared",
+            title: "All images cleared 🧹",
             description: "Your mood board has been reset.",
             duration: 2000,
         });
@@ -196,6 +197,7 @@ export const MoodBoard = () => {
                         handlePositionChange={handlePositionChange}
                         updateImageDimensions={updateImageDimensions}
                         updateImageRotation={updateImageRotation}
+                        updateImageComment={updateImageComment} // 💬 Pass comment update function
                         removeImage={removeImage}
                         bringToFront={bringToFront}
                         duplicateImage={duplicateImage}
