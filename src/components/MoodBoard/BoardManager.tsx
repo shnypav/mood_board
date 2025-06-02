@@ -108,7 +108,7 @@ export const BoardManager = () => {
 
     return (
         <>
-            <div className="absolute top-4 right-4 z-50">
+            <div className="absolute top-4 left-4 z-50">
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                         <Button variant="outline"
@@ -134,9 +134,7 @@ export const BoardManager = () => {
                             <ChevronDown className="h-4 w-4"/>
                         </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-64">
-                        <DropdownMenuLabel>Boards</DropdownMenuLabel>
-                        <DropdownMenuSeparator/>
+                    <DropdownMenuContent align="start" className="w-64 ml-2">
 
                         {boards.map((board) => (
                             <DropdownMenuItem

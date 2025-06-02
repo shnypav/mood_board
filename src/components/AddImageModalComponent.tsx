@@ -1,5 +1,4 @@
 import React, {useState, useRef, useEffect} from 'react';
-import {useImages} from '../contexts/ImageContext';
 import {Dialog, DialogContent, DialogHeader, DialogTitle} from '@/shadcn/components/ui/dialog';
 import {Button} from '@/shadcn/components/ui/button';
 import {Input} from '@/shadcn/components/ui/input';
@@ -10,9 +9,10 @@ import {Upload, Link, Loader2, X, Image as ImageIcon} from 'lucide-react';
 interface AddImageModalProps {
     isOpen: boolean;
     onClose: () => void;
+    addImage: (imageUrl: string) => void; // 🔧 Added missing addImage prop
 }
 
-export const AddImageModal: React.FC<AddImageModalProps> = ({isOpen, onClose}) => {
+export const AddImageModal: React.FC<AddImageModalProps> = ({isOpen, onClose, addImage}) => {
     // State management
     const [imageUrl, setImageUrl] = useState<string>('');
     const [isUploading, setIsUploading] = useState<boolean>(false);
@@ -22,7 +22,6 @@ export const AddImageModal: React.FC<AddImageModalProps> = ({isOpen, onClose}) =
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
     // Context and hooks
-    const {addImage} = useImages();
     const {toast} = useToast();
 
     // Refs
@@ -421,19 +420,6 @@ export const AddImageModal: React.FC<AddImageModalProps> = ({isOpen, onClose}) =
                                 />
                             </div>
                         )}
-
-                        {!previewUrl && (
-                            <div className="flex justify-end">
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    onClick={onClose}
-                                    disabled={isUploading}
-                                >
-                                    Cancel
-                                </Button>
-                            </div>
-                        )}
                     </TabsContent>
 
                     <TabsContent value="url" className="space-y-4 py-4">
@@ -454,14 +440,6 @@ export const AddImageModal: React.FC<AddImageModalProps> = ({isOpen, onClose}) =
                             </div>
 
                             <div className="flex justify-end space-x-2">
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    onClick={onClose}
-                                    disabled={isUploading}
-                                >
-                                    Cancel
-                                </Button>
                                 <Button
                                     type="submit"
                                     disabled={!imageUrl.trim() || isUploading}

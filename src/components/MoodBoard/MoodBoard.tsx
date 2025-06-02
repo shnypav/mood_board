@@ -19,6 +19,7 @@ export const MoodBoard = () => {
     const { currentBoard, updateBoardBackground } = useBoards();
     const {
         images,
+        addImage, // 🖼️ Added missing addImage function
         removeImage,
         updateImagePosition,
         updateImageDimensions,
@@ -54,12 +55,17 @@ export const MoodBoard = () => {
     });
 
     // Handlers
-    const handleOpenModal = () => setIsModalOpen(true);
+    const handleOpenModal = () => {
+        console.log('🎯 handleOpenModal called!'); // 🐛 Debug log
+        console.log('🔍 Current isModalOpen state:', isModalOpen); // 🐛 Debug log
+        setIsModalOpen(true);
+        console.log('✅ setIsModalOpen(true) called!'); // 🐛 Debug log
+    };
     const handleCloseModal = () => setIsModalOpen(false);
 
     const handleColorChange = (color) => {
         if (currentBoard) {
-            updateBoardBackground(currentBoard.id, color);
+            updateBoardBackground(currentBoard.id, color.hex);
             toast({
                 title: "Background updated 🎨",
                 description: `Background color changed for "${currentBoard.name}".`,
@@ -139,8 +145,8 @@ export const MoodBoard = () => {
                     height: '100vh',
                     overflow: 'hidden',
                     position: 'relative',
-                    backgroundColor: backgroundColor,
-                    cursor: isPanning ? 'grabbing' : 'grab', // 🖱️ Visual feedback for panning
+                    backgroundColor: backgroundColor === 'rainbow' ? 'transparent' : backgroundColor,
+                    cursor: isPanning ? 'grabbing' : 'grab',
                 }}
                 // 🌍 Enable board interactions for infinite canvas
                 onMouseDown={handleMouseDown}
@@ -148,6 +154,19 @@ export const MoodBoard = () => {
                 onMouseUp={handleMouseUp}
                 onWheel={handleWheel}
             >
+                {/* 🌈 Rainbow background overlay */}
+                {backgroundColor === 'rainbow' && (
+                    <div className="rainbow-background" style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        zIndex: 0,
+                        pointerEvents: 'none'
+                    }} />
+                )}
+
                 <div
                     className="board-content"
                     style={{
@@ -157,13 +176,12 @@ export const MoodBoard = () => {
                         width: '100%',
                         height: '100%',
                         position: 'relative',
-                        transition: isPanning ? 'none' : 'transform 0.2s ease-out', // 🎭 Smooth transitions when not panning
+                        zIndex: 1,
+                        transition: isPanning ? 'none' : 'transform 0.2s ease-out',
                     }}
                 >
-                    {/* 🖼️ Show empty state when no images */}
-                    {images.length === 0 ? (
-                        <EmptyState onAddImage={handleOpenModal} />
-                    ) : (
+                    {/* 🖼️ Only show board content when images exist */}
+                    {images.length > 0 && (
                         <BoardContent
                             images={images}
                             zoomLevel={zoomLevel}
@@ -179,12 +197,22 @@ export const MoodBoard = () => {
                         />
                     )}
                 </div>
+
+                {/* 🎯 Empty state positioned absolutely to stay centered regardless of pan */}
+                {images.length === 0 && (
+                    <div
+                        className="absolute inset-0 flex items-center justify-center"
+                        style={{ zIndex: 2 }}
+                    >
+                        <EmptyState onAddImage={handleOpenModal} />
+                    </div>
+                )}
             </div>
 
             {/* 🎨 Color picker for background */}
             <div className="absolute bottom-8 left-8">
                 <ColorPicker
-                    currentColor={backgroundColor}
+                    backgroundColor={backgroundColor}
                     onColorChange={handleColorChange}
                     predefinedColors={predefinedColors}
                     onPredefinedColorClick={handlePredefinedColorClick}
@@ -215,9 +243,20 @@ export const MoodBoard = () => {
                     <AddImageModal
                         isOpen={isModalOpen}
                         onClose={handleCloseModal}
+                        addImage={addImage}
                     />
                 )}
             </AnimatePresence>
+
+            {/* 📊 Board indicators */}
+            <BoardIndicators
+                zoomLevel={zoomLevel}
+                panPosition={panPosition}
+                imageCount={images.length}
+                isClearConfirmOpen={isClearConfirmOpen}
+                setIsClearConfirmOpen={setIsClearConfirmOpen}
+                handleClearAllImages={handleClearAllImages}
+            />
         </div>
     );
 };

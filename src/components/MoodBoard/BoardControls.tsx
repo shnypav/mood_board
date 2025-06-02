@@ -38,13 +38,14 @@ export const BoardControls: React.FC<BoardControlsProps> = ({
                                                                 setIsClearConfirmOpen
                                                             }) => {
     return (
-        <div className="fixed bottom-8 right-8">
+        <div className="fixed bottom-8 right-8" style={{zIndex: 9999}}>
             <Popover>
                 <PopoverTrigger asChild>
                     <Button
                         className="rounded-full h-16 w-16 shadow-lg rainbow-button"
                         size="icon"
                         title="Board Controls"
+                        style={{zIndex: 9999, position: 'relative'}}
                     >
                         <Settings className="h-7 w-7"/>
                     </Button>

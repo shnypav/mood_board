@@ -359,7 +359,17 @@ export const CommentInput: React.FC<CommentInputProps> = ({
                     variant="ghost"
                     size="sm"
                     className="h-6 w-6 p-0"
-                    onClick={onClose}
+                    onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        console.log('❌ Close button clicked!'); // 🐛 Debug log
+                        onClose();
+                    }}
+                    onMouseDown={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        console.log('❌ Close button mouse down!'); // 🐛 Debug log
+                    }}
                     title="Close (ESC)" // 💡 Added hint about ESC key
                 >
                     <X className="h-3 w-3" />
