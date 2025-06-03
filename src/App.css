@@ -3,12 +3,13 @@
 @tailwind utilities;
 
 html {
-    @apply antialiased;
+  @apply antialiased;
 }
 
 body {
   font-family: var(--font-text);
   font-size: var(--font-size-root);
+  
   background-color: hsl(var(--background));
   color: hsl(var(--foreground));
 }

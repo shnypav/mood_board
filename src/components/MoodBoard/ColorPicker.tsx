@@ -1,8 +1,8 @@
-import React from 'react';
-import { Button } from '@/shadcn/components/ui/button';
-import { Palette } from 'lucide-react';
-import { Popover, PopoverContent, PopoverTrigger } from '@/shadcn/components/ui/popover';
-import { SketchPicker } from 'react-color';
+import React, { useState } from 'react';
+import {Button} from '@/shadcn/components/ui/button';
+import {Palette, ChevronDown} from 'lucide-react';
+import {Popover, PopoverContent, PopoverTrigger} from '@/shadcn/components/ui/popover';
+import {SketchPicker} from 'react-color';
 
 interface ColorPickerProps {
     backgroundColor: string;
@@ -49,7 +49,7 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
                     <Palette className="h-7 w-7" />
                 </Button>
             </PopoverTrigger>
-            <PopoverContent 
+            <PopoverContent
                 className="bg-transparent border-0 shadow-none"
                 style={{ zIndex: 1001 }}
             >

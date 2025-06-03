@@ -45,12 +45,13 @@ export const BoardManager = () => {
 
     const handleCreateBoard = () => {
         if (newBoardName.trim()) {
-            createBoard(newBoardName.trim());
+            const trimmedName = newBoardName.trim();
+            createBoard(trimmedName);
             setNewBoardName('');
             setIsCreateDialogOpen(false);
             toast({
                 title: "Board created",
-                description: `"${newBoardName.trim()}" has been created and is now active.`,
+                description: `"${trimmedName}" has been created and is now active.`,
                 duration: 2000,
             });
         }
@@ -58,13 +59,15 @@ export const BoardManager = () => {
 
     const handleRenameBoard = () => {
         if (renameBoardName.trim() && selectedBoardId) {
-            renameBoard(selectedBoardId, renameBoardName.trim());
+            
+            const trimmedName = renameBoardName.trim();
+            renameBoard(selectedBoardId, trimmedName);
             setRenameBoardName('');
             setSelectedBoardId('');
             setIsRenameDialogOpen(false);
             toast({
                 title: "Board renamed",
-                description: `Board has been renamed to "${renameBoardName.trim()}".`,
+                description: `Board has been renamed to "${trimmedName}".`,
                 duration: 2000,
             });
         }
@@ -108,7 +111,7 @@ export const BoardManager = () => {
 
     return (
         <>
-            <div className="absolute top-4 left-4 z-50">
+            <div className="absolute top-4 right-4 z-50">
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                         <Button variant="outline"
@@ -134,7 +137,9 @@ export const BoardManager = () => {
                             <ChevronDown className="h-4 w-4"/>
                         </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="start" className="w-64 ml-2">
+                    <DropdownMenuContent align="end" className="w-64">
+                        <DropdownMenuLabel>Boards</DropdownMenuLabel>
+                        <DropdownMenuSeparator/>
 
                         {boards.map((board) => (
                             <DropdownMenuItem

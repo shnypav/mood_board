@@ -16,10 +16,9 @@ import {useBoardInteractions} from '../../hooks/useBoardInteractions';
 import '../../styles/rainbow.css';
 
 export const MoodBoard = () => {
-    const { currentBoard, updateBoardBackground } = useBoards();
+    const {currentBoard, updateBoardBackground} = useBoards();
     const {
         images,
-        addImage, // 🖼️ Added missing addImage function
         removeImage,
         updateImagePosition,
         updateImageDimensions,
@@ -55,12 +54,7 @@ export const MoodBoard = () => {
     });
 
     // Handlers
-    const handleOpenModal = () => {
-        console.log('🎯 handleOpenModal called!'); // 🐛 Debug log
-        console.log('🔍 Current isModalOpen state:', isModalOpen); // 🐛 Debug log
-        setIsModalOpen(true);
-        console.log('✅ setIsModalOpen(true) called!'); // 🐛 Debug log
-    };
+    const handleOpenModal = () => setIsModalOpen(true);
     const handleCloseModal = () => setIsModalOpen(false);
 
     const handleColorChange = (color) => {
@@ -101,7 +95,7 @@ export const MoodBoard = () => {
 
     // 🎯 Reset pan position to center
     const handleResetPan = () => {
-        setPanPosition({ x: 0, y: 0 });
+        setPanPosition({x: 0, y: 0});
         toast({
             title: "View reset 🎯",
             description: "Board view has been centered.",
@@ -112,7 +106,7 @@ export const MoodBoard = () => {
     // ⌨️ Keyboard panning support
     const handleKeyboardPan = (direction: string) => () => {
         const panStep = 100 / zoomLevel; // Adjust step based on zoom
-        const newPosition = { ...panPosition };
+        const newPosition = {...panPosition};
 
         switch (direction) {
             case 'up':
@@ -135,18 +129,18 @@ export const MoodBoard = () => {
     return (
         <div className="mood-board-container">
             <div className="mood-board-header">
-                <BoardManager />
+                <BoardManager/>
             </div>
             <div
                 ref={boardRef}
-                className="mood-board-canvas"
+                className={`mood-board-canvas ${backgroundColor === 'rainbow' ? 'rainbow-background' : ''}`}
                 style={{
                     width: '100%',
                     height: '100vh',
                     overflow: 'hidden',
                     position: 'relative',
-                    backgroundColor: backgroundColor === 'rainbow' ? 'transparent' : backgroundColor,
-                    cursor: isPanning ? 'grabbing' : 'grab',
+                    backgroundColor: backgroundColor !== 'rainbow' ? backgroundColor : 'transparent',
+                    cursor: isPanning ? 'grabbing' : 'grab', // 🖱️ Visual feedback for panning
                 }}
                 // 🌍 Enable board interactions for infinite canvas
                 onMouseDown={handleMouseDown}
@@ -154,19 +148,6 @@ export const MoodBoard = () => {
                 onMouseUp={handleMouseUp}
                 onWheel={handleWheel}
             >
-                {/* 🌈 Rainbow background overlay */}
-                {backgroundColor === 'rainbow' && (
-                    <div className="rainbow-background" style={{
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        zIndex: 0,
-                        pointerEvents: 'none'
-                    }} />
-                )}
-
                 <div
                     className="board-content"
                     style={{
@@ -176,12 +157,13 @@ export const MoodBoard = () => {
                         width: '100%',
                         height: '100%',
                         position: 'relative',
-                        zIndex: 1,
-                        transition: isPanning ? 'none' : 'transform 0.2s ease-out',
+                        transition: isPanning ? 'none' : 'transform 0.2s ease-out', // 🎭 Smooth transitions when not panning
                     }}
                 >
-                    {/* 🖼️ Only show board content when images exist */}
-                    {images.length > 0 && (
+                    {/* 🖼️ Show empty state when no images */}
+                    {images.length === 0 ? (
+                        <EmptyState onAddImage={handleOpenModal}/>
+                    ) : (
                         <BoardContent
                             images={images}
                             zoomLevel={zoomLevel}
@@ -197,22 +179,12 @@ export const MoodBoard = () => {
                         />
                     )}
                 </div>
-
-                {/* 🎯 Empty state positioned absolutely to stay centered regardless of pan */}
-                {images.length === 0 && (
-                    <div
-                        className="absolute inset-0 flex items-center justify-center"
-                        style={{ zIndex: 2 }}
-                    >
-                        <EmptyState onAddImage={handleOpenModal} />
-                    </div>
-                )}
             </div>
 
             {/* 🎨 Color picker for background */}
             <div className="absolute bottom-8 left-8">
                 <ColorPicker
-                    backgroundColor={backgroundColor}
+                    currentColor={backgroundColor}
                     onColorChange={handleColorChange}
                     predefinedColors={predefinedColors}
                     onPredefinedColorClick={handlePredefinedColorClick}
@@ -220,7 +192,7 @@ export const MoodBoard = () => {
             </div>
 
             {/* ➕ Add image button */}
-            <AddImageButton onClick={handleOpenModal} />
+            <AddImageButton onClick={handleOpenModal}/>
 
             {/* 🎛️ Board controls with full functionality restored */}
             <div className="absolute bottom-8 right-8">
@@ -243,20 +215,9 @@ export const MoodBoard = () => {
                     <AddImageModal
                         isOpen={isModalOpen}
                         onClose={handleCloseModal}
-                        addImage={addImage}
                     />
                 )}
             </AnimatePresence>
-
-            {/* 📊 Board indicators */}
-            <BoardIndicators
-                zoomLevel={zoomLevel}
-                panPosition={panPosition}
-                imageCount={images.length}
-                isClearConfirmOpen={isClearConfirmOpen}
-                setIsClearConfirmOpen={setIsClearConfirmOpen}
-                handleClearAllImages={handleClearAllImages}
-            />
         </div>
     );
 };

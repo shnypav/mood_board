@@ -1,40 +1,33 @@
 import React from 'react';
-import {motion} from 'framer-motion';
-import {Button} from '@/shadcn/components/ui/button';
-import {ImagePlus} from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Button } from '@/shadcn/components/ui/button';
+import { ImageIcon } from 'lucide-react';
 
-interface EmptyStateProps {
-    onAddImage: () => void;
-}
-
-export const EmptyState: React.FC<EmptyStateProps> = ({ onAddImage }) => {
-  return (
-    <div className="flex flex-col items-center justify-center h-full min-h-[400px] text-center p-8">
-      <div className="mb-6">
-        <img 
-          src="/assets/empty-board.svg" 
-          alt="Empty mood board" 
-          className="w-32 h-32 mx-auto opacity-50"
+export const EmptyState: React.FC<{ onAddClick: () => void }> = ({ onAddClick }) => (
+    <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="flex flex-col items-center justify-center min-h-[400px] space-y-6"
+    >
+        <img
+            src="/assets/empty-board.svg"
+            alt="Empty board"
+            className="w-60 h-60 opacity-50"
         />
-      </div>
-      
-      <h3 className="text-xl font-semibold text-gray-700 mb-2">
-        Your mood board is empty
-      </h3>
-      
-      <p className="text-gray-500 mb-6 max-w-md">
-        Start building your visual inspiration by adding images, colors, and ideas to your board.
-      </p>
-      
-      <button
-        onClick={onAddImage}
-        className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors duration-200 flex items-center gap-2"
-      >
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-        </svg>
-        Add Your First Image
-      </button>
-    </div>
-  );
-};
+        <div className="text-center">
+            <h2 className="text-xl font-semibold mb-2">Your mood board is empty</h2>
+            <p className="text-muted-foreground mb-4">
+                Add some images to get started with your inspiration collection
+            </p>
+            <Button
+                onClick={onAddClick}
+                size="lg"
+                className="rainbow-button"
+            >
+                <ImageIcon className="mr-2 h-5 w-5" />
+                Add First Image
+            </Button>
+        </div>
+    </motion.div>
+);
