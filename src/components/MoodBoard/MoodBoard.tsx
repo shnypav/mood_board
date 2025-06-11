@@ -14,7 +14,31 @@ import {AddImageButton} from './AddImageButton';
 import {BoardManager} from './BoardManager';
 import {useBoardInteractions} from '../../hooks/useBoardInteractions';
 import '../../styles/rainbow.css';
-
+/**
+ * MoodBoard Component
+ *
+ * A component that displays a collection of images in a grid layout to create a mood board.
+ * Users can add, remove, and rearrange images to create a visual representation of their ideas.
+ *
+ * @component
+ * @example
+ * ```tsx
+ * <MoodBoard
+ *   images={imagesArray}
+ *   onImageAdd={handleImageAdd}
+ *   onImageRemove={handleImageRemove}
+ *   editable={true}
+ * />
+ * ```
+ *
+ * @param {Object} props - The component props
+ * @param {Array<Image>} props.images - Array of image objects to display on the mood board
+ * @param {Function} [props.onImageAdd] - Callback function when an image is added
+ * @param {Function} [props.onImageRemove] - Callback function when an image is removed
+ * @param {boolean} [props.editable=false] - Whether the mood board is editable
+ * @param {string} [props.className] - Additional CSS class names
+ * @returns {JSX.Element} The rendered MoodBoard component
+ */
 export const MoodBoard = () => {
     const {currentBoard, updateBoardBackground} = useBoards();
     const {
@@ -160,10 +184,8 @@ export const MoodBoard = () => {
                         transition: isPanning ? 'none' : 'transform 0.2s ease-out', // 🎭 Smooth transitions when not panning
                     }}
                 >
-                    {/* 🖼️ Show empty state when no images */}
-                    {images.length === 0 ? (
-                        <EmptyState onAddImage={handleOpenModal}/>
-                    ) : (
+                    {/* 🖼️ Show images when they exist */}
+                    {images.length > 0 && (
                         <BoardContent
                             images={images}
                             zoomLevel={zoomLevel}
@@ -179,6 +201,37 @@ export const MoodBoard = () => {
                         />
                     )}
                 </div>
+
+                {/* 🖼️ Empty state positioned OUTSIDE transformed container - CENTERED IN WINDOW! */}
+                {images.length === 0 && (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none">
+                        <div className="mb-8 pointer-events-auto">
+                            <svg
+                                className="w-24 h-24 mx-auto text-gray-300 mb-4"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={1}
+                                    d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                                />
+                            </svg>
+                            <h2 className="text-xl font-semibold mb-2">Your mood board is empty</h2>
+                            <p className="text-gray-600 mb-6">
+                                Start building your mood board by adding your first image
+                            </p>
+                            <button
+                                onClick={handleOpenModal}
+                                className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg font-medium transition-colors"
+                            >
+                                Add Your First Image
+                            </button>
+                        </div>
+                    </div>
+                )}
             </div>
 
             {/* 🎨 Color picker for background */}
@@ -192,7 +245,7 @@ export const MoodBoard = () => {
             </div>
 
             {/* ➕ Add image button */}
-            <AddImageButton onClick={handleOpenModal}/>
+            <AddImageButton handleOpenModal={handleOpenModal}/>
 
             {/* 🎛️ Board controls with full functionality restored */}
             <div className="absolute bottom-8 right-8">

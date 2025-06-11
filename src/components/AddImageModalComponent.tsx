@@ -270,216 +270,189 @@ export const AddImageModal: React.FC<AddImageModalProps> = ({isOpen, onClose}) =
 
     return (
         <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-            <DialogContent className="sm:max-w-md">
+            <DialogContent className="sm:max-w-md max-w-[90vw] max-h-[90vh] overflow-hidden">
                 <DialogHeader>
                     <DialogTitle>
                         Add New Image
                     </DialogTitle>
                 </DialogHeader>
 
-                <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                    <TabsList className="grid w-full grid-cols-2">
-                        <TabsTrigger value="upload" className="flex items-center gap-2">
-                            <Upload size={16}/> Upload
-                        </TabsTrigger>
-                        <TabsTrigger value="url" className="flex items-center gap-2">
-                            <Link size={16}/> URL
-                        </TabsTrigger>
-                    </TabsList>
+                <div className="overflow-y-auto max-h-[calc(90vh-120px)]">
+                    <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                        <TabsList className="grid w-full grid-cols-2">
+                            <TabsTrigger value="upload" className="flex items-center gap-2">
+                                <Upload size={16}/> Upload
+                            </TabsTrigger>
+                            <TabsTrigger value="url" className="flex items-center gap-2">
+                                <Link size={16}/> URL
+                            </TabsTrigger>
+                        </TabsList>
 
-                    <TabsContent value="upload" className="space-y-4 py-4">
-                        {previewUrl ? (
-                            <div className="space-y-4">
-                                <div className="border rounded-lg p-4">
-                                    <div className="flex justify-between items-center mb-2">
-                                        <h3 className="text-sm font-medium">Image Preview</h3>
+                        <TabsContent value="upload" className="space-y-4 py-4">
+                            {previewUrl ? (
+                                <div className="space-y-4">
+                                    <div className="border rounded-lg p-4">
+                                        <div className="flex justify-between items-center mb-2">
+                                            <h3 className="text-sm font-medium">Image Preview</h3>
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                onClick={handleCancelPreview}
+                                                aria-label="Cancel preview"
+                                            >
+                                                <X className="h-4 w-4"/>
+                                            </Button>
+                                        </div>
+                                        <div className="relative w-full bg-gray-100 rounded overflow-hidden aspect-video max-h-48">
+                                            <img
+                                                src={previewUrl}
+                                                alt="Preview"
+                                                className="w-full h-full object-contain"
+                                            />
+                                        </div>
+                                        <p className="mt-2 text-xs text-gray-500 truncate">
+                                            {selectedFile?.name} ({selectedFile ? (selectedFile.size / 1024).toFixed(1) : 0} KB)
+                                        </p>
+                                    </div>
+
+                                    <div className="flex justify-end">
                                         <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            onClick={handleCancelPreview}
-                                            aria-label="Cancel preview"
+                                            type="button"
+                                            onClick={handleUploadSelectedFile}
+                                            disabled={isUploading}
                                         >
-                                            <X className="h-4 w-4"/>
+                                            {isUploading ? (
+                                                <>
+                                                    <Loader2 className="mr-2 h-4 w-4 animate-spin"/>
+                                                    Uploading...
+                                                </>
+                                            ) : (
+                                                'Upload Image'
+                                            )}
                                         </Button>
                                     </div>
-                                    <div className="relative w-full h-48 bg-gray-100 rounded overflow-hidden">
-                                        <img
-                                            src={previewUrl}
-                                            alt="Preview"
-                                            className="object-contain w-full h-full"
-                                        />
+                                </div>
+                            ) : (
+                                <div className="space-y-4">
+                                    <div
+                                        className={`
+                                            border-2 border-dashed rounded-lg p-8 text-center transition-all duration-200
+                                            ${isDragging
+                                            ? 'border-primary bg-primary/10 scale-105'
+                                            : 'border-gray-300 hover:border-gray-400 hover:bg-gray-50'
+                                        }
+                                            ${isUploading ? 'pointer-events-none opacity-50' : ''}
+                                        `}
+                                        onDragEnter={handleDragEnter}
+                                        onDragLeave={handleDragLeave}
+                                        onDragOver={handleDragOver}
+                                        onDrop={handleDrop}
+                                        data-testid="dropzone"
+                                    >
+                                        {isUploading ? (
+                                            <div className="flex flex-col items-center space-y-4">
+                                                <Loader2 className="h-12 w-12 animate-spin text-primary"/>
+                                                <p className="text-sm text-gray-600">Processing image...</p>
+                                            </div>
+                                        ) : (
+                                            <div className="flex flex-col items-center space-y-4">
+                                                <Upload
+                                                    className={`h-12 w-12 ${isDragging ? 'text-primary' : 'text-gray-400'}`}/>
+                                                <div className="space-y-2">
+                                                    <p className="text-sm font-medium text-gray-900">
+                                                        Drag and drop your image here
+                                                    </p>
+                                                    <p className="text-xs text-gray-500">
+                                                        PNG, JPG, GIF, WebP up to 10MB
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
-                                    <p className="mt-2 text-xs text-gray-500 truncate">
-                                        {selectedFile?.name} ({selectedFile ? (selectedFile.size / 1024).toFixed(1) : 0} KB)
-                                    </p>
+
+                                    <div className="text-center">
+                                        <span className="text-sm text-gray-500">or</span>
+                                    </div>
+
+                                    <div className="flex justify-center">
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            onClick={(e) => {
+                                                e.preventDefault();
+                                                e.stopPropagation();
+                                                handleFileInputClick();
+                                            }}
+                                            disabled={isUploading}
+                                            className="flex items-center gap-2"
+                                            ref={uploadButtonRef}
+                                            aria-label="Upload a file from your device"
+                                            data-testid="upload-button"
+                                        >
+                                            <Upload className="h-4 w-4"/>
+                                            Upload a file
+                                        </Button>
+                                    </div>
+
+                                    {/* Hidden file input - FIXED positioning */}
+                                    <input
+                                        ref={fileInputRef}
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={handleFileChange}
+                                        style={{
+                                            display: 'none',
+                                            position: 'absolute',
+                                            left: '-9999px',
+                                            opacity: 0,
+                                            pointerEvents: 'none'
+                                        }}
+                                        disabled={isUploading}
+                                        data-testid="file-input"
+                                        aria-hidden="true"
+                                        tabIndex={-1}
+                                    />
+                                </div>
+                            )}
+                        </TabsContent>
+
+                        <TabsContent value="url" className="space-y-4 py-4">
+                            <form onSubmit={handleUrlSubmit} className="space-y-4">
+                                <div className="space-y-2">
+                                    <label htmlFor="image-url" className="text-sm font-medium">
+                                        Image URL
+                                    </label>
+                                    <Input
+                                        id="image-url"
+                                        type="url"
+                                        placeholder="https://example.com/image.jpg"
+                                        value={imageUrl}
+                                        onChange={(e) => setImageUrl(e.target.value)}
+                                        disabled={isUploading}
+                                        data-testid="url-input"
+                                    />
                                 </div>
 
-                                <div className="flex justify-end space-x-2">
+                                <div className="flex justify-end">
                                     <Button
-                                        type="button"
-                                        variant="outline"
-                                        onClick={handleCancelPreview}
-                                        disabled={isUploading}
-                                    >
-                                        Cancel
-                                    </Button>
-                                    <Button
-                                        type="button"
-                                        onClick={handleUploadSelectedFile}
-                                        disabled={isUploading}
+                                        type="submit"
+                                        disabled={!imageUrl.trim() || isUploading}
+                                        data-testid="add-url-button"
                                     >
                                         {isUploading ? (
                                             <>
                                                 <Loader2 className="mr-2 h-4 w-4 animate-spin"/>
-                                                Uploading...
+                                                Adding...
                                             </>
                                         ) : (
-                                            'Upload Image'
+                                            'Add Image'
                                         )}
                                     </Button>
                                 </div>
-                            </div>
-                        ) : (
-                            <div className="space-y-4">
-                                <div
-                                    className={`
-                                        border-2 border-dashed rounded-lg p-8 text-center transition-all duration-200
-                                        ${isDragging
-                                        ? 'border-primary bg-primary/10 scale-105'
-                                        : 'border-gray-300 hover:border-gray-400 hover:bg-gray-50'
-                                    }
-                                        ${isUploading ? 'pointer-events-none opacity-50' : ''}
-                                    `}
-                                    onDragEnter={handleDragEnter}
-                                    onDragLeave={handleDragLeave}
-                                    onDragOver={handleDragOver}
-                                    onDrop={handleDrop}
-                                    data-testid="dropzone"
-                                >
-                                    {isUploading ? (
-                                        <div className="flex flex-col items-center space-y-4">
-                                            <Loader2 className="h-12 w-12 animate-spin text-primary"/>
-                                            <p className="text-sm text-gray-600">Processing image...</p>
-                                        </div>
-                                    ) : (
-                                        <div className="flex flex-col items-center space-y-4">
-                                            <Upload
-                                                className={`h-12 w-12 ${isDragging ? 'text-primary' : 'text-gray-400'}`}/>
-                                            <div className="space-y-2">
-                                                <p className="text-sm font-medium text-gray-900">
-                                                    Drag and drop your image here
-                                                </p>
-                                                <p className="text-xs text-gray-500">
-                                                    PNG, JPG, GIF, WebP up to 10MB
-                                                </p>
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-
-                                <div className="text-center">
-                                    <span className="text-sm text-gray-500">or</span>
-                                </div>
-
-                                <div className="flex justify-center">
-                                    <Button
-                                        type="button"
-                                        variant="outline"
-                                        onClick={(e) => {
-                                            e.preventDefault();
-                                            e.stopPropagation();
-                                            handleFileInputClick();
-                                        }}
-                                        disabled={isUploading}
-                                        className="flex items-center gap-2"
-                                        ref={uploadButtonRef}
-                                        aria-label="Upload a file from your device"
-                                        data-testid="upload-button"
-                                    >
-                                        <Upload className="h-4 w-4"/>
-                                        Upload a file
-                                    </Button>
-                                </div>
-
-                                {/* Hidden file input - FIXED positioning */}
-                                <input
-                                    ref={fileInputRef}
-                                    type="file"
-                                    accept="image/*"
-                                    onChange={handleFileChange}
-                                    style={{
-                                        display: 'none',
-                                        position: 'absolute',
-                                        left: '-9999px',
-                                        opacity: 0,
-                                        pointerEvents: 'none'
-                                    }}
-                                    disabled={isUploading}
-                                    data-testid="file-input"
-                                    aria-hidden="true"
-                                    tabIndex={-1}
-                                />
-                            </div>
-                        )}
-
-                        {!previewUrl && (
-                            <div className="flex justify-end">
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    onClick={onClose}
-                                    disabled={isUploading}
-                                >
-                                    Cancel
-                                </Button>
-                            </div>
-                        )}
-                    </TabsContent>
-
-                    <TabsContent value="url" className="space-y-4 py-4">
-                        <form onSubmit={handleUrlSubmit} className="space-y-4">
-                            <div className="space-y-2">
-                                <label htmlFor="image-url" className="text-sm font-medium">
-                                    Image URL
-                                </label>
-                                <Input
-                                    id="image-url"
-                                    type="url"
-                                    placeholder="https://example.com/image.jpg"
-                                    value={imageUrl}
-                                    onChange={(e) => setImageUrl(e.target.value)}
-                                    disabled={isUploading}
-                                    data-testid="url-input"
-                                />
-                            </div>
-
-                            <div className="flex justify-end space-x-2">
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    onClick={onClose}
-                                    disabled={isUploading}
-                                >
-                                    Cancel
-                                </Button>
-                                <Button
-                                    type="submit"
-                                    disabled={!imageUrl.trim() || isUploading}
-                                    data-testid="add-url-button"
-                                >
-                                    {isUploading ? (
-                                        <>
-                                            <Loader2 className="mr-2 h-4 w-4 animate-spin"/>
-                                            Adding...
-                                        </>
-                                    ) : (
-                                        'Add Image'
-                                    )}
-                                </Button>
-                            </div>
-                        </form>
-                    </TabsContent>
-                </Tabs>
+                            </form>
+                        </TabsContent>
+                    </Tabs>
+                </div>
             </DialogContent>
         </Dialog>
     );
