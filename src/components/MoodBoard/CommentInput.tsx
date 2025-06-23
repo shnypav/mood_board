@@ -353,7 +353,7 @@ export const CommentInput: React.FC<CommentInputProps> = ({
                     <span className="font-medium text-sm">
                         {isEditing ? 'Add Comment' : 'Image Comment'}
                     </span>
-                    <Move className="h-3 w-3 text-gray-400" title="Drag to move" />
+                    <Move className="h-3 w-3 text-gray-400" />
                 </div>
                 <Button
                     variant="ghost"

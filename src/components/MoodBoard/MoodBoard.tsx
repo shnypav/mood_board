@@ -225,7 +225,7 @@ export const MoodBoard = () => {
                             </p>
                             <button
                                 onClick={handleOpenModal}
-                                className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg font-medium transition-colors"
+                                className="rainbow-button text-white px-6 py-3 rounded-lg font-medium transition-colors"
                             >
                                 Add Your First Image
                             </button>
@@ -237,7 +237,7 @@ export const MoodBoard = () => {
             {/* 🎨 Color picker for background */}
             <div className="absolute bottom-8 left-8">
                 <ColorPicker
-                    currentColor={backgroundColor}
+                    backgroundColor={backgroundColor}
                     onColorChange={handleColorChange}
                     predefinedColors={predefinedColors}
                     onPredefinedColorClick={handlePredefinedColorClick}

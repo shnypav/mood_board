@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useBoards } from './BoardContext';
+import { compressImage, checkStorageQuota, getDataUrlSize, formatBytes } from '../utils/imageCompression';
 
 interface Image {
     id: string;
@@ -13,7 +14,7 @@ interface Image {
 }
 interface ImageContextType {
     images: Image[];
-    addImage: (imageUrl: string) => void;
+    addImage: (imageUrl: string) => Promise<{ success: boolean; error?: string }>;
     removeImage: (id: string) => Promise<void>;
     updateImagePosition: (id: string, position: { x: number, y: number }, bringToFrontFlag?: boolean) => void;
     updateImageDimensions: (id: string, dimensions: { width: number, height: number }) => void;
@@ -78,22 +79,85 @@ export const ImageProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     // Save images to localStorage whenever they change
     useEffect(() => {
         if (!isLoading && !boardsLoading && currentBoardId) {
-            const { imagesKey, maxZIndexKey } = getStorageKeys(currentBoardId);
-            localStorage.setItem(imagesKey, JSON.stringify(images));
-            localStorage.setItem(maxZIndexKey, JSON.stringify(maxZIndex));
+            try {
+                const { imagesKey, maxZIndexKey } = getStorageKeys(currentBoardId);
+                const imagesData = JSON.stringify(images);
+                const maxZIndexData = JSON.stringify(maxZIndex);
+                
+                // Check storage quota before saving
+                if (!checkStorageQuota(imagesData)) {
+                    console.warn('Storage quota exceeded, unable to save images');
+                    return;
+                }
+                
+                localStorage.setItem(imagesKey, imagesData);
+                localStorage.setItem(maxZIndexKey, maxZIndexData);
+            } catch (error) {
+                console.error('Failed to save images to localStorage:', error);
+            }
         }
     }, [images, maxZIndex, isLoading, currentBoardId, boardsLoading]);
 
-    const addImage = (imageUrl: string) => {
-        const newZIndex = maxZIndex + 1;
-        setMaxZIndex(newZIndex);
-
-        const newImage: Image = {
-            id: Date.now().toString(),
-            imageUrl,
-            zIndex: newZIndex
-        };
-        setImages(prev => [...prev, newImage]);
+    const addImage = async (imageUrl: string): Promise<{ success: boolean; error?: string }> => {
+        try {
+            // Check if it's a data URL that needs compression
+            let processedImageUrl = imageUrl;
+            
+            if (imageUrl.startsWith('data:image/')) {
+                // Get original size
+                const originalSize = getDataUrlSize(imageUrl);
+                console.log(`Original image size: ${formatBytes(originalSize)}`);
+                
+                // Compress the image to reduce storage requirements
+                try {
+                    processedImageUrl = await compressImage(imageUrl, {
+                        maxWidth: 1200,
+                        maxHeight: 1200,
+                        quality: 0.8,
+                        format: 'jpeg'
+                    });
+                    
+                    const compressedSize = getDataUrlSize(processedImageUrl);
+                    console.log(`Compressed image size: ${formatBytes(compressedSize)} (${Math.round((1 - compressedSize/originalSize) * 100)}% reduction)`);
+                } catch (compressionError) {
+                    console.warn('Image compression failed, using original:', compressionError);
+                    // If compression fails, we'll try to use the original image
+                }
+            }
+            
+            // Create the new image object
+            const newZIndex = maxZIndex + 1;
+            const newImage: Image = {
+                id: Date.now().toString(),
+                imageUrl: processedImageUrl,
+                zIndex: newZIndex
+            };
+            
+            // Check storage quota before adding
+            const tempImages = [...images, newImage];
+            const testData = JSON.stringify(tempImages);
+            
+            if (!checkStorageQuota(testData)) {
+                const currentSize = formatBytes(testData.length);
+                return {
+                    success: false,
+                    error: `Storage quota exceeded. Adding this image would require ${currentSize} of storage. Please delete some images to free up space.`
+                };
+            }
+            
+            // Add the image if quota check passes
+            setMaxZIndex(newZIndex);
+            setImages(prev => [...prev, newImage]);
+            
+            return { success: true };
+            
+        } catch (error) {
+            console.error('Failed to add image:', error);
+            return {
+                success: false,
+                error: error instanceof Error ? error.message : 'Failed to process image'
+            };
+        }
     };
 
     const removeImage = async (id: string) => {

@@ -77,12 +77,20 @@ export const AddImageModal: React.FC<AddImageModalProps> = ({isOpen, onClose}) =
                 img.src = url.toString();
             });
 
-            addImage(imageUrl.trim());
-            toast({
-                title: "Success",
-                description: "Image added successfully from URL"
-            });
-            onClose();
+            const result = await addImage(imageUrl.trim());
+            if (result.success) {
+                toast({
+                    title: "Success",
+                    description: "Image added successfully from URL"
+                });
+                onClose();
+            } else {
+                toast({
+                    variant: "destructive",
+                    title: "Storage Error",
+                    description: result.error || "Failed to add image"
+                });
+            }
         } catch (error) {
             toast({
                 variant: "destructive",
@@ -199,12 +207,20 @@ export const AddImageModal: React.FC<AddImageModalProps> = ({isOpen, onClose}) =
                 reader.readAsDataURL(selectedFile);
             });
 
-            addImage(dataUrl);
-            toast({
-                title: "Success",
-                description: `Image "${selectedFile.name}" uploaded successfully`
-            });
-            onClose();
+            const result = await addImage(dataUrl);
+            if (result.success) {
+                toast({
+                    title: "Success",
+                    description: `Image "${selectedFile.name}" uploaded successfully`
+                });
+                onClose();
+            } else {
+                toast({
+                    variant: "destructive",
+                    title: "Storage Error", 
+                    description: result.error || "Failed to upload image"
+                });
+            }
         } catch (error) {
             toast({
                 variant: "destructive",

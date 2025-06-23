@@ -22,7 +22,9 @@ describe('AddImageModal', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     
-    // Setup mocks
+    // Setup mocks - addImage now returns a Promise
+    mockAddImage.mockResolvedValue({ success: true });
+    
     (useImages as jest.Mock).mockReturnValue({
       addImage: mockAddImage,
     });

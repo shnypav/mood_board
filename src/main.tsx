@@ -4,6 +4,9 @@ import App from './App'
 import './index.css'
 import { Toaster } from '@/shadcn/components/ui/toaster'
 
+// Import test utilities for development
+import './utils/testImageCompression';
+
 const rootElement = document.getElementById('root');
 
 if (!rootElement) {

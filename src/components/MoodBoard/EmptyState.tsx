@@ -2,6 +2,11 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/shadcn/components/ui/button';
 import { ImageIcon } from 'lucide-react';
+import '../../styles/rainbow.css';
+
+interface EmptyStateProps {
+  onAddImage: () => void;
+}
 
 export const EmptyState: React.FC<EmptyStateProps> = ({ onAddImage }) => {
   return (
@@ -26,7 +31,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({ onAddImage }) => {
         </p>
         <button
           onClick={onAddImage}
-          className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg font-medium transition-colors"
+          className="rainbow-button text-white px-6 py-3 rounded-lg font-medium transition-colors"
         >
           Add Your First Image
         </button>
